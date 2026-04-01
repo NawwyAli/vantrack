@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 const today = new Date().toISOString().split('T')[0]
 
-export default function ClientForm({ client, onSubmit, onClose }) {
+export default function ClientForm({ client, saving, onSubmit, onClose }) {
   const [name, setName] = useState(client?.name || '')
   const [address, setAddress] = useState(client?.address || '')
   const [phone, setPhone] = useState(client?.phone || '')
@@ -102,8 +102,8 @@ export default function ClientForm({ client, onSubmit, onClose }) {
 
         <div className="form-actions">
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={handleSubmit}>
-            {isEditing ? 'Save Changes' : 'Add Client'}
+          <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
+            {saving ? 'Saving…' : isEditing ? 'Save Changes' : 'Add Client'}
           </button>
         </div>
       </div>

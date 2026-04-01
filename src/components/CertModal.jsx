@@ -9,7 +9,7 @@ function getTodayStr() {
   return `${yyyy}-${mm}-${dd}`
 }
 
-export default function CertModal({ property, onSubmit, onClose }) {
+export default function CertModal({ property, saving, onSubmit, onClose }) {
   const existingCert = property?.certificate
   const isRenewing = !!existingCert
 
@@ -85,8 +85,8 @@ export default function CertModal({ property, onSubmit, onClose }) {
 
         <div className="form-actions">
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={handleSubmit}>
-            {isRenewing ? 'Renew Certificate' : 'Save Certificate'}
+          <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
+            {saving ? 'Saving…' : isRenewing ? 'Renew Certificate' : 'Save Certificate'}
           </button>
         </div>
       </div>

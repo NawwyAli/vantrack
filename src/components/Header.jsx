@@ -1,4 +1,4 @@
-export default function Header({ view, selectedClient, onBack, onEdit, onAddClient }) {
+export default function Header({ view, selectedClient, profile, onBack, onEdit, onAddClient, onSignOut }) {
   const renderLeft = () => {
     if (view === 'client-detail') {
       return (
@@ -21,6 +21,17 @@ export default function Header({ view, selectedClient, onBack, onEdit, onAddClie
   }
 
   const renderRight = () => {
+    if (view === 'dashboard') {
+      return (
+        <button className="icon-btn" onClick={onSignOut} aria-label="Sign out" title="Sign out">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M7 3H4a1 1 0 00-1 1v12a1 1 0 001 1h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            <path d="M13 14l3-4-3-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M16 10H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+        </button>
+      )
+    }
     if (view === 'clients') {
       return (
         <button className="icon-btn" onClick={onAddClient} aria-label="Add client">

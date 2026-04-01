@@ -1,6 +1,15 @@
 import { getCertStatus, getDaysLabel, fmtDate, getExpiryDate } from '../utils.js'
 
-export default function Dashboard({ clients, onRenew, onClientClick, onAddCert }) {
+export default function Dashboard({ clients, loading, onRenew, onClientClick, onAddCert }) {
+  if (loading) {
+    return (
+      <div className="page">
+        <div className="page-content" style={{ textAlign: 'center', paddingTop: '40px', color: 'var(--text2)' }}>
+          Loading…
+        </div>
+      </div>
+    )
+  }
   // Flatten all properties across all clients
   const allEntries = []
   for (const client of clients) {

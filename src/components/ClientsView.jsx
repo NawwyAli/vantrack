@@ -8,7 +8,16 @@ const statusLabels = {
   none: 'No Certificate',
 }
 
-export default function ClientsView({ clients, onClientClick }) {
+export default function ClientsView({ clients, loading, onClientClick }) {
+  if (loading) {
+    return (
+      <div className="page">
+        <div className="page-content" style={{ textAlign: 'center', paddingTop: '40px', color: 'var(--text2)' }}>
+          Loading…
+        </div>
+      </div>
+    )
+  }
   const [search, setSearch] = useState('')
 
   const filtered = clients.filter(c =>

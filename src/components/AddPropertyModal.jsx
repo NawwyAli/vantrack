@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export default function AddPropertyModal({ onSubmit, onClose }) {
+export default function AddPropertyModal({ saving, onSubmit, onClose }) {
   const [address, setAddress] = useState('')
   const [error, setError] = useState('')
 
@@ -33,7 +33,9 @@ export default function AddPropertyModal({ onSubmit, onClose }) {
 
         <div className="form-actions">
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={handleSubmit}>Add Property</button>
+          <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
+            {saving ? 'Saving…' : 'Add Property'}
+          </button>
         </div>
       </div>
     </div>
