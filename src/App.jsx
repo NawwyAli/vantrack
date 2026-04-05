@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from './hooks/useAuth.js'
 import { useData } from './hooks/useData.js'
 
@@ -14,7 +14,7 @@ import CertModal from './components/CertModal.jsx'
 import AddPropertyModal from './components/AddPropertyModal.jsx'
 
 export default function App() {
-  const { user, profile, loading: authLoading, signIn, signUp, signOut, resetPassword } = useAuth()
+  const { user, profile, loading: authLoading, signIn, signUp, signOut, resetPassword, refreshProfile } = useAuth()
   const {
     clients, loading: dataLoading,
     addClient, updateClient, deleteClient,
@@ -33,6 +33,26 @@ export default function App() {
   // deleteConfirm: { type: 'client'|'property'|'certificate', clientId, propertyId? }
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [paymentProcessing, setPaymentProcessing] = useState(
+    () => new URLSearchParams(window.location.search).get('payment') === 'success'
+  )
+  const pollRef = useRef(null)
+
+  // Poll for subscription activation after Stripe redirect
+  useEffect(() => {
+    if (!paymentProcessing || !user) return
+    window.history.replaceState({}, '', '/')
+    let attempts = 0
+    pollRef.current = setInterval(async () => {
+      attempts++
+      const updated = await refreshProfile()
+      if (updated?.subscription_status === 'active' || attempts >= 10) {
+        clearInterval(pollRef.current)
+        setPaymentProcessing(false)
+      }
+    }, 2000)
+    return () => clearInterval(pollRef.current)
+  }, [paymentProcessing, user])
 
   const selectedClient = clients.find(c => c.id === selectedClientId) || null
 
@@ -47,6 +67,16 @@ export default function App() {
 
   if (!user) return <AuthScreen onSignIn={signIn} onSignUp={signUp} onResetPassword={resetPassword} />
 
+  if (paymentProcessing) {
+    return (
+      <div className="app-loading">
+        <div className="app-loading-icon">✅</div>
+        <div className="app-loading-text">Activating your subscription…</div>
+        <p style={{ color: 'var(--text2)', fontSize: '14px', marginTop: '8px' }}>This usually takes a few seconds.</p>
+      </div>
+    )
+  }
+
   // --- Access check ---
   function getTrialInfo(profile) {
     if (!profile) return { hasAccess: false, daysLeft: 0, isTrial: false }
@@ -59,7 +89,7 @@ export default function App() {
   }
 
   const { hasAccess, daysLeft, isTrial } = getTrialInfo(profile)
-  if (!hasAccess) return <TrialWall onSignOut={signOut} />
+  if (!hasAccess) return <TrialWall user={user} onSignOut={signOut} />
   const showTrialBanner = isTrial && daysLeft !== null && daysLeft <= 7
 
   // --- CRUD handlers ---

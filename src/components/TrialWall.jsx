@@ -1,4 +1,27 @@
-export default function TrialWall({ onSignOut }) {
+import { useState } from 'react'
+
+export default function TrialWall({ user, onSignOut }) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleSubscribe() {
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/.netlify/functions/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id, email: user.email }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to create checkout session')
+      window.location.href = data.url
+    } catch (err) {
+      setError(err.message)
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="auth-screen">
       <div className="auth-logo">
@@ -15,7 +38,7 @@ export default function TrialWall({ onSignOut }) {
           keep full access to VanTrack — unlimited clients, properties, and CP12 tracking.
         </p>
 
-        <div className="trial-features">
+        <div style={{ marginBottom: '24px' }}>
           {[
             '✓ Unlimited landlord clients',
             '✓ Unlimited properties',
@@ -27,9 +50,10 @@ export default function TrialWall({ onSignOut }) {
           ))}
         </div>
 
-        <button className="btn btn-primary auth-submit" style={{ marginTop: '24px' }}
-          onClick={() => alert('Stripe integration coming soon')}>
-          Subscribe — £25/month
+        {error && <div className="auth-error">{error}</div>}
+
+        <button className="btn btn-primary auth-submit" onClick={handleSubscribe} disabled={loading}>
+          {loading ? 'Redirecting to checkout…' : 'Subscribe — £25/month'}
         </button>
 
         <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', marginTop: '10px' }}

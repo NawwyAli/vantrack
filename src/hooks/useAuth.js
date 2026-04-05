@@ -13,6 +13,13 @@ export function useAuth() {
       .eq('id', userId)
       .single()
     setProfile(data)
+    return data
+  }
+
+  async function refreshProfile() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) return null
+    return fetchProfile(session.user.id)
   }
 
   useEffect(() => {
@@ -59,5 +66,5 @@ export function useAuth() {
     await supabase.auth.signOut()
   }
 
-  return { user, profile, loading, signIn, signUp, signOut, resetPassword }
+  return { user, profile, loading, signIn, signUp, signOut, resetPassword, refreshProfile }
 }
