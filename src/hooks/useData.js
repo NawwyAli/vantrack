@@ -95,6 +95,12 @@ export function useData(user) {
     await fetchClients()
   }
 
+  async function updateProperty(propertyId, address) {
+    const { error } = await supabase.from('properties').update({ address }).eq('id', propertyId)
+    if (error) throw error
+    await fetchClients()
+  }
+
   async function saveCertificate(clientId, propertyId, issueDate, notes) {
     // Archive old active cert
     await supabase.from('certificates')
@@ -108,5 +114,27 @@ export function useData(user) {
     await fetchClients()
   }
 
-  return { clients, loading, addClient, updateClient, deleteClient, addProperty, deleteProperty, saveCertificate, refresh: fetchClients }
+  async function updateCertificate(certId, issueDate, notes) {
+    const { error } = await supabase.from('certificates')
+      .update({ issue_date: issueDate, notes: notes || '' })
+      .eq('id', certId)
+    if (error) throw error
+    await fetchClients()
+  }
+
+  async function deleteCertificate(propertyId) {
+    const { error } = await supabase.from('certificates')
+      .delete()
+      .eq('property_id', propertyId)
+      .eq('is_active', true)
+    if (error) throw error
+    await fetchClients()
+  }
+
+  return {
+    clients, loading, addClient, updateClient, deleteClient,
+    addProperty, updateProperty, deleteProperty,
+    saveCertificate, updateCertificate, deleteCertificate,
+    refresh: fetchClients,
+  }
 }

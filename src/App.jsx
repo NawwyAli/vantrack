@@ -3,6 +3,7 @@ import { useAuth } from './hooks/useAuth.js'
 import { useData } from './hooks/useData.js'
 
 import AuthScreen from './components/AuthScreen.jsx'
+import TrialWall from './components/TrialWall.jsx'
 import Header from './components/Header.jsx'
 import BottomNav from './components/BottomNav.jsx'
 import Dashboard from './components/Dashboard.jsx'
@@ -13,25 +14,28 @@ import CertModal from './components/CertModal.jsx'
 import AddPropertyModal from './components/AddPropertyModal.jsx'
 
 export default function App() {
-  const { user, profile, loading: authLoading, signIn, signUp, signOut } = useAuth()
+  const { user, profile, loading: authLoading, signIn, signUp, signOut, resetPassword } = useAuth()
   const {
     clients, loading: dataLoading,
     addClient, updateClient, deleteClient,
-    addProperty, deleteProperty, saveCertificate,
+    addProperty, updateProperty, deleteProperty,
+    saveCertificate, updateCertificate, deleteCertificate,
   } = useData(user)
 
   const [view, setView] = useState('dashboard')
   const [selectedClientId, setSelectedClientId] = useState(null)
   const [clientFormOpen, setClientFormOpen] = useState(false)
   const [editingClient, setEditingClient] = useState(null)
+  // certModal: { clientId, propertyId, editMode? }
   const [certModal, setCertModal] = useState(null)
+  // addPropertyModal: { clientId, propertyId?, initialAddress? }
   const [addPropertyModal, setAddPropertyModal] = useState(null)
+  // deleteConfirm: { type: 'client'|'property'|'certificate', clientId, propertyId? }
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [saving, setSaving] = useState(false)
 
   const selectedClient = clients.find(c => c.id === selectedClientId) || null
 
-  // Show full-screen loader while checking auth
   if (authLoading) {
     return (
       <div className="app-loading">
@@ -41,10 +45,24 @@ export default function App() {
     )
   }
 
-  // Not logged in → show auth screen
-  if (!user) return <AuthScreen onSignIn={signIn} onSignUp={signUp} />
+  if (!user) return <AuthScreen onSignIn={signIn} onSignUp={signUp} onResetPassword={resetPassword} />
 
-  // --- Async CRUD handlers ---
+  // --- Access check ---
+  function getTrialInfo(profile) {
+    if (!profile) return { hasAccess: false, daysLeft: 0, isTrial: false }
+    if (profile.subscription_status === 'active') return { hasAccess: true, daysLeft: null, isTrial: false }
+    if (profile.subscription_status === 'trialing' && profile.trial_ends_at) {
+      const daysLeft = Math.ceil((new Date(profile.trial_ends_at) - new Date()) / 86400000)
+      return { hasAccess: daysLeft > 0, daysLeft, isTrial: true }
+    }
+    return { hasAccess: false, daysLeft: 0, isTrial: false }
+  }
+
+  const { hasAccess, daysLeft, isTrial } = getTrialInfo(profile)
+  if (!hasAccess) return <TrialWall onSignOut={signOut} />
+  const showTrialBanner = isTrial && daysLeft !== null && daysLeft <= 7
+
+  // --- CRUD handlers ---
 
   async function handleAddClient(data) {
     setSaving(true)
@@ -78,6 +96,13 @@ export default function App() {
     finally { setSaving(false) }
   }
 
+  async function handleUpdateProperty(propertyId, address) {
+    setSaving(true)
+    try { await updateProperty(propertyId, address); setAddPropertyModal(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
   async function handleDeleteProperty(clientId, propertyId) {
     setSaving(true)
     try { await deleteProperty(clientId, propertyId); setDeleteConfirm(null) }
@@ -92,31 +117,77 @@ export default function App() {
     finally { setSaving(false) }
   }
 
+  async function handleUpdateCertificate(certId, issueDate, notes) {
+    setSaving(true)
+    try { await updateCertificate(certId, issueDate, notes); setCertModal(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  async function handleDeleteCertificate(propertyId) {
+    setSaving(true)
+    try { await deleteCertificate(propertyId); setDeleteConfirm(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
   // --- Navigation ---
 
   function handleClientClick(clientId) { setSelectedClientId(clientId); setView('client-detail') }
   function handleBack() { setView('clients'); setSelectedClientId(null) }
   function handleEditClient() { setEditingClient(selectedClient); setClientFormOpen(true) }
   function handleAddClientOpen() { setEditingClient(null); setClientFormOpen(true) }
-  function handleRenewFromDashboard(clientId, propertyId) { setCertModal({ clientId, propertyId }) }
-  function handleAddCertFromDashboard(clientId, propertyId) { setCertModal({ clientId, propertyId }) }
-  function handleRenewFromDetail(propertyId) { setCertModal({ clientId: selectedClientId, propertyId }) }
-  function handleAddCertFromDetail(propertyId) { setCertModal({ clientId: selectedClientId, propertyId }) }
   function handleAddPropertyClick() { setAddPropertyModal({ clientId: selectedClientId }) }
-  function handleDeletePropertyPrompt(propertyId) { setDeleteConfirm({ type: 'property', clientId: selectedClientId, propertyId }) }
-  function handleDeleteClientPrompt() { setDeleteConfirm({ type: 'client', clientId: selectedClientId }) }
+  function handleEditPropertyClick(propertyId, address) {
+    setAddPropertyModal({ clientId: selectedClientId, propertyId, initialAddress: address })
+  }
+  function handleDeletePropertyPrompt(propertyId) {
+    setDeleteConfirm({ type: 'property', clientId: selectedClientId, propertyId })
+  }
+  function handleDeleteClientPrompt() {
+    setDeleteConfirm({ type: 'client', clientId: selectedClientId })
+  }
+  function handleDeleteCertPrompt(propertyId) {
+    setDeleteConfirm({ type: 'certificate', clientId: selectedClientId, propertyId })
+  }
   function handleConfirmDelete() {
     if (!deleteConfirm) return
     if (deleteConfirm.type === 'client') handleDeleteClient(deleteConfirm.clientId)
-    else handleDeleteProperty(deleteConfirm.clientId, deleteConfirm.propertyId)
+    else if (deleteConfirm.type === 'property') handleDeleteProperty(deleteConfirm.clientId, deleteConfirm.propertyId)
+    else if (deleteConfirm.type === 'certificate') handleDeleteCertificate(deleteConfirm.propertyId)
   }
 
   const certModalProperty = certModal
     ? clients.find(c => c.id === certModal.clientId)?.properties.find(p => p.id === certModal.propertyId)
     : null
 
+  const deleteMessages = {
+    client: {
+      title: 'Delete Client?',
+      body: 'This will permanently delete the client and all their properties and certificate history.',
+      btn: 'Delete Client',
+    },
+    property: {
+      title: 'Delete Property?',
+      body: 'This will permanently delete the property and its certificate history.',
+      btn: 'Delete Property',
+    },
+    certificate: {
+      title: 'Delete Certificate?',
+      body: 'This will remove the current active certificate. Past certificates in history are unaffected.',
+      btn: 'Delete Certificate',
+    },
+  }
+  const confirmMsg = deleteConfirm ? deleteMessages[deleteConfirm.type] : null
+
   return (
     <div className="app">
+      {showTrialBanner && (
+        <div className="trial-banner">
+          ⏰ {daysLeft === 1 ? 'Last day' : `${daysLeft} days`} left in your free trial
+          <span className="trial-banner-cta" onClick={() => alert('Stripe integration coming soon')}>Subscribe →</span>
+        </div>
+      )}
       <Header
         view={view}
         selectedClient={selectedClient}
@@ -131,9 +202,9 @@ export default function App() {
         <Dashboard
           clients={clients}
           loading={dataLoading}
-          onRenew={handleRenewFromDashboard}
+          onRenew={(clientId, propertyId) => setCertModal({ clientId, propertyId })}
           onClientClick={handleClientClick}
-          onAddCert={handleAddCertFromDashboard}
+          onAddCert={(clientId, propertyId) => setCertModal({ clientId, propertyId })}
         />
       )}
 
@@ -148,9 +219,12 @@ export default function App() {
           onEdit={handleEditClient}
           onDelete={handleDeleteClientPrompt}
           onAddProperty={handleAddPropertyClick}
+          onEditProperty={handleEditPropertyClick}
           onDeleteProperty={handleDeletePropertyPrompt}
-          onRenew={handleRenewFromDetail}
-          onAddCert={handleAddCertFromDetail}
+          onRenew={propertyId => setCertModal({ clientId: selectedClientId, propertyId })}
+          onAddCert={propertyId => setCertModal({ clientId: selectedClientId, propertyId })}
+          onEditCert={propertyId => setCertModal({ clientId: selectedClientId, propertyId, editMode: true })}
+          onDeleteCert={handleDeleteCertPrompt}
         />
       )}
 
@@ -160,7 +234,7 @@ export default function App() {
 
       <BottomNav view={view} setView={v => { setView(v); if (v !== 'client-detail') setSelectedClientId(null) }} />
 
-      {/* Modals */}
+      {/* Client form modal */}
       {clientFormOpen && (
         <ClientForm
           client={editingClient}
@@ -170,40 +244,53 @@ export default function App() {
         />
       )}
 
+      {/* Add / Renew / Edit certificate modal */}
       {certModal && certModalProperty && (
         <CertModal
           property={certModalProperty}
           saving={saving}
-          onSubmit={(issueDate, notes) => handleSaveCertificate(certModal.clientId, certModal.propertyId, issueDate, notes)}
+          editMode={!!certModal.editMode}
+          onSubmit={(issueDate, notes) => {
+            if (certModal.editMode) {
+              handleUpdateCertificate(certModalProperty.certificate.id, issueDate, notes)
+            } else {
+              handleSaveCertificate(certModal.clientId, certModal.propertyId, issueDate, notes)
+            }
+          }}
           onClose={() => setCertModal(null)}
         />
       )}
 
+      {/* Add / Edit property modal */}
       {addPropertyModal && (
         <AddPropertyModal
           saving={saving}
-          onSubmit={address => handleAddProperty(addPropertyModal.clientId, address)}
+          initialAddress={addPropertyModal.initialAddress}
+          onSubmit={address => {
+            if (addPropertyModal.propertyId) {
+              handleUpdateProperty(addPropertyModal.propertyId, address)
+            } else {
+              handleAddProperty(addPropertyModal.clientId, address)
+            }
+          }}
           onClose={() => setAddPropertyModal(null)}
         />
       )}
 
-      {deleteConfirm && (
+      {/* Delete confirmation modal */}
+      {deleteConfirm && confirmMsg && (
         <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setDeleteConfirm(null) }}>
           <div className="modal">
             <div className="modal-handle" />
-            <div className="modal-title">
-              {deleteConfirm.type === 'client' ? 'Delete Client?' : 'Delete Property?'}
-            </div>
+            <div className="modal-title">{confirmMsg.title}</div>
             <p style={{ color: 'var(--text2)', fontSize: '14px', lineHeight: '1.5', marginBottom: '8px' }}>
-              {deleteConfirm.type === 'client'
-                ? 'This will permanently delete the client and all their properties and certificate history.'
-                : 'This will permanently delete the property and its certificate history.'}
+              {confirmMsg.body}
             </p>
             <p style={{ color: 'var(--text2)', fontSize: '14px', marginBottom: '8px' }}>This action cannot be undone.</p>
             <div className="form-actions">
               <button className="btn btn-ghost" onClick={() => setDeleteConfirm(null)}>Cancel</button>
               <button className="btn btn-danger" onClick={handleConfirmDelete} disabled={saving}>
-                {saving ? 'Deleting…' : deleteConfirm.type === 'client' ? 'Delete Client' : 'Delete Property'}
+                {saving ? 'Deleting…' : confirmMsg.btn}
               </button>
             </div>
           </div>

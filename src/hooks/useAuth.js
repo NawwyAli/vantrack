@@ -48,9 +48,16 @@ export function useAuth() {
     // Profile is created automatically via the handle_new_user trigger in Supabase
   }
 
+  async function resetPassword(email) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/?reset=true`,
+    })
+    if (error) throw error
+  }
+
   async function signOut() {
     await supabase.auth.signOut()
   }
 
-  return { user, profile, loading, signIn, signUp, signOut }
+  return { user, profile, loading, signIn, signUp, signOut, resetPassword }
 }

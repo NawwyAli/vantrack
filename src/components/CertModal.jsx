@@ -3,42 +3,36 @@ import { fmtDate, getExpiryDate, getCertStatus } from '../utils.js'
 
 function getTodayStr() {
   const d = new Date()
-  const yyyy = d.getFullYear()
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${yyyy}-${mm}-${dd}`
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-export default function CertModal({ property, saving, onSubmit, onClose }) {
+export default function CertModal({ property, saving, onSubmit, onClose, editMode }) {
   const existingCert = property?.certificate
-  const isRenewing = !!existingCert
+  const isRenewing = !!existingCert && !editMode
 
-  const [issueDate, setIssueDate] = useState(getTodayStr())
-  const [notes, setNotes] = useState('')
+  const [issueDate, setIssueDate] = useState(
+    editMode && existingCert?.issueDate ? existingCert.issueDate : getTodayStr()
+  )
+  const [notes, setNotes] = useState(editMode && existingCert?.notes ? existingCert.notes : '')
   const [error, setError] = useState('')
 
   const handleSubmit = () => {
-    if (!issueDate) {
-      setError('Issue date is required')
-      return
-    }
+    if (!issueDate) { setError('Issue date is required'); return }
     onSubmit(issueDate, notes.trim())
   }
 
   const expiryStr = existingCert?.issueDate
-    ? (() => {
-        const d = getExpiryDate(existingCert.issueDate)
-        return d.toISOString().slice(0, 10)
-      })()
+    ? getExpiryDate(existingCert.issueDate).toISOString().slice(0, 10)
     : null
-
   const status = existingCert ? getCertStatus(existingCert.issueDate) : 'none'
+
+  const title = editMode ? 'Edit Certificate' : isRenewing ? 'Renew CP12' : 'Add Certificate'
 
   return (
     <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="modal">
         <div className="modal-handle" />
-        <div className="modal-title">{isRenewing ? 'Renew CP12' : 'Add Certificate'}</div>
+        <div className="modal-title">{title}</div>
 
         {isRenewing && existingCert && (
           <div className="existing-cert-info">
@@ -49,9 +43,7 @@ export default function CertModal({ property, saving, onSubmit, onClose }) {
             </div>
             <div className="existing-cert-row">
               <span className="existing-cert-label">Expires</span>
-              <span className={`existing-cert-value cert-meta ${status}`}>
-                {fmtDate(expiryStr)}
-              </span>
+              <span className={`existing-cert-value cert-meta ${status}`}>{fmtDate(expiryStr)}</span>
             </div>
             {existingCert.notes && (
               <div className="existing-cert-row">
@@ -62,31 +54,29 @@ export default function CertModal({ property, saving, onSubmit, onClose }) {
           </div>
         )}
 
+        {editMode && (
+          <p style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '16px' }}>
+            This corrects the existing certificate — no history entry is created.
+          </p>
+        )}
+
         <div className="form-group">
           <label className="form-label">Issue Date *</label>
-          <input
-            className="form-input"
-            type="date"
-            value={issueDate}
-            onChange={e => { setIssueDate(e.target.value); setError('') }}
-          />
+          <input className="form-input" type="date" value={issueDate}
+            onChange={e => { setIssueDate(e.target.value); setError('') }} />
           {error && <div className="form-error">{error}</div>}
         </div>
 
         <div className="form-group">
           <label className="form-label">Notes (optional)</label>
-          <textarea
-            className="form-textarea"
-            placeholder="Any notes about this certificate..."
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-          />
+          <textarea className="form-textarea" placeholder="Any notes about this certificate..."
+            value={notes} onChange={e => setNotes(e.target.value)} />
         </div>
 
         <div className="form-actions">
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
           <button className="btn btn-primary" onClick={handleSubmit} disabled={saving}>
-            {saving ? 'Saving…' : isRenewing ? 'Renew Certificate' : 'Save Certificate'}
+            {saving ? 'Saving…' : editMode ? 'Save Changes' : isRenewing ? 'Renew Certificate' : 'Save Certificate'}
           </button>
         </div>
       </div>

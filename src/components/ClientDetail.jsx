@@ -1,28 +1,43 @@
 import { getCertStatus, getDaysLabel, fmtDate, getExpiryDate } from '../utils.js'
 
+const EditIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+  </svg>
+)
+
+const TrashIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="3 6 5 6 21 6"/>
+    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+    <path d="M10 11v6M14 11v6"/>
+    <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+  </svg>
+)
+
 export default function ClientDetail({
-  client,
-  onBack,
-  onEdit,
-  onDelete,
-  onAddProperty,
-  onDeleteProperty,
-  onRenew,
-  onAddCert,
+  client, onBack, onEdit, onDelete,
+  onAddProperty, onEditProperty, onDeleteProperty,
+  onRenew, onAddCert, onEditCert, onDeleteCert,
 }) {
   if (!client) return null
 
   return (
     <div className="page">
       <div className="page-content">
+
         {/* Client info card */}
         <div className="info-card">
           <div className="info-row">
             <div className="info-icon">👤</div>
-            <div>
+            <div style={{ flex: 1 }}>
               <div className="info-label">Landlord Name</div>
               <div className="info-value">{client.name}</div>
             </div>
+            <button className="icon-btn" onClick={onEdit} style={{ color: 'var(--text2)' }} aria-label="Edit client">
+              <EditIcon />
+            </button>
           </div>
           {client.address && (
             <div className="info-row">
@@ -56,12 +71,7 @@ export default function ClientDetail({
         {/* Properties section */}
         <div className="section-row">
           <div className="section-title">Properties</div>
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={onAddProperty}
-          >
-            + Add Property
-          </button>
+          <button className="btn btn-ghost btn-sm" onClick={onAddProperty}>+ Add Property</button>
         </div>
 
         {client.properties.length === 0 && (
@@ -76,12 +86,9 @@ export default function ClientDetail({
           const issueDate = property.certificate?.issueDate
           const status = getCertStatus(issueDate)
           const hasCert = !!property.certificate
-          const expiryDate = issueDate ? fmtDate(
-            (() => {
-              const d = getExpiryDate(issueDate)
-              return d.toISOString().slice(0, 10)
-            })()
-          ) : null
+          const expiryDate = issueDate
+            ? fmtDate(getExpiryDate(issueDate).toISOString().slice(0, 10))
+            : null
           const daysLabel = getDaysLabel(issueDate)
 
           return (
@@ -89,17 +96,12 @@ export default function ClientDetail({
               <div className="property-header">
                 <div className={`status-dot ${status}`} />
                 <div className="property-address">{property.address}</div>
-                <button
-                  className="property-delete-btn"
-                  onClick={() => onDeleteProperty(property.id)}
-                  aria-label="Delete property"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-                    <path d="M10 11v6M14 11v6"/>
-                    <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
-                  </svg>
+                <button className="icon-btn" style={{ color: 'var(--text2)', minWidth: 'auto', minHeight: 'auto', padding: '4px' }}
+                  onClick={() => onEditProperty(property.id, property.address)} aria-label="Edit property">
+                  <EditIcon />
+                </button>
+                <button className="property-delete-btn" onClick={() => onDeleteProperty(property.id)} aria-label="Delete property">
+                  <TrashIcon />
                 </button>
               </div>
 
@@ -129,23 +131,17 @@ export default function ClientDetail({
 
               <div className="property-actions">
                 {hasCert ? (
-                  <button
-                    className="btn-renew"
-                    onClick={() => onRenew(property.id)}
-                  >
-                    Renew CP12
-                  </button>
+                  <>
+                    <button className="btn-renew" onClick={() => onRenew(property.id)}>Renew CP12</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => onEditCert(property.id)}>Edit</button>
+                    <button className="btn btn-ghost btn-sm" style={{ color: 'var(--red)' }}
+                      onClick={() => onDeleteCert(property.id)}>Delete</button>
+                  </>
                 ) : (
-                  <button
-                    className="btn-add-cert"
-                    onClick={() => onAddCert(property.id)}
-                  >
-                    Add Certificate
-                  </button>
+                  <button className="btn-add-cert" onClick={() => onAddCert(property.id)}>Add Certificate</button>
                 )}
               </div>
 
-              {/* History */}
               {property.history && property.history.length > 0 && (
                 <div className="history-section">
                   <div className="history-title">Previous Certificates</div>
@@ -161,15 +157,9 @@ export default function ClientDetail({
           )
         })}
 
-        {/* Danger zone */}
         <div className="danger-zone">
           <div className="danger-zone-title">Danger Zone</div>
-          <button
-            className="btn btn-danger"
-            onClick={onDelete}
-          >
-            Delete Client
-          </button>
+          <button className="btn btn-danger" onClick={onDelete}>Delete Client</button>
         </div>
       </div>
     </div>
