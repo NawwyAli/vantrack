@@ -20,16 +20,29 @@ export default function Header({ view, selectedClient, profile, onBack, onEdit, 
     return 'VanTrack'
   }
 
+  const handleSupport = () => {
+    window.location.href = 'mailto:vantrack@outlook.com?subject=VanTrack%20Support'
+  }
+
   const renderRight = () => {
     if (view === 'dashboard') {
       return (
-        <button className="icon-btn" onClick={onSignOut} aria-label="Sign out" title="Sign out">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M7 3H4a1 1 0 00-1 1v12a1 1 0 001 1h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            <path d="M13 14l3-4-3-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M16 10H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
-        </button>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <button className="icon-btn" onClick={handleSupport} aria-label="Contact support" title="Contact support">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+              <circle cx="12" cy="17" r=".5" fill="currentColor"/>
+            </svg>
+          </button>
+          <button className="icon-btn" onClick={onSignOut} aria-label="Sign out" title="Sign out">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M7 3H4a1 1 0 00-1 1v12a1 1 0 001 1h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M13 14l3-4-3-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M16 10H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
       )
     }
     if (view === 'clients') {

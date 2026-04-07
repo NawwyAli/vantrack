@@ -4,6 +4,8 @@ import { useData } from './hooks/useData.js'
 
 import AuthScreen from './components/AuthScreen.jsx'
 import TrialWall from './components/TrialWall.jsx'
+import LegalPage from './components/LegalPage.jsx'
+import Onboarding from './components/Onboarding.jsx'
 import Header from './components/Header.jsx'
 import BottomNav from './components/BottomNav.jsx'
 import Dashboard from './components/Dashboard.jsx'
@@ -33,6 +35,10 @@ export default function App() {
   // deleteConfirm: { type: 'client'|'property'|'certificate', clientId, propertyId? }
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [legalPage, setLegalPage] = useState(null) // 'privacy' | 'terms'
+  const [showOnboarding, setShowOnboarding] = useState(
+    () => user ? !localStorage.getItem(`vantrack_onboarded_${user.id}`) : false
+  )
   const [paymentProcessing, setPaymentProcessing] = useState(
     () => new URLSearchParams(window.location.search).get('payment') === 'success'
   )
@@ -56,6 +62,8 @@ export default function App() {
 
   const selectedClient = clients.find(c => c.id === selectedClientId) || null
 
+  if (legalPage) return <LegalPage page={legalPage} onBack={() => setLegalPage(null)} />
+
   if (authLoading) {
     return (
       <div className="app-loading">
@@ -65,7 +73,7 @@ export default function App() {
     )
   }
 
-  if (!user) return <AuthScreen onSignIn={signIn} onSignUp={signUp} onResetPassword={resetPassword} />
+  if (!user) return <AuthScreen onSignIn={signIn} onSignUp={signUp} onResetPassword={resetPassword} onShowLegal={setLegalPage} />
 
   if (paymentProcessing) {
     return (
@@ -91,6 +99,11 @@ export default function App() {
   const { hasAccess, daysLeft, isTrial } = getTrialInfo(profile)
   if (!hasAccess) return <TrialWall user={user} onSignOut={signOut} />
   const showTrialBanner = isTrial && daysLeft !== null && daysLeft <= 7
+
+  function dismissOnboarding() {
+    localStorage.setItem(`vantrack_onboarded_${user.id}`, '1')
+    setShowOnboarding(false)
+  }
 
   // --- CRUD handlers ---
 
@@ -262,6 +275,12 @@ export default function App() {
         <button className="fab" onClick={handleAddClientOpen} aria-label="Add client">+</button>
       )}
 
+      <div className="app-legal-footer">
+        <button className="legal-link" onClick={() => setLegalPage('privacy')}>Privacy</button>
+        <span style={{ color: 'var(--text3)' }}>·</span>
+        <button className="legal-link" onClick={() => setLegalPage('terms')}>Terms</button>
+      </div>
+
       <BottomNav view={view} setView={v => { setView(v); if (v !== 'client-detail') setSelectedClientId(null) }} />
 
       {/* Client form modal */}
@@ -308,6 +327,21 @@ export default function App() {
       )}
 
       {/* Delete confirmation modal */}
+      {/* Onboarding overlay */}
+      {showOnboarding && (
+        <Onboarding
+          saving={saving}
+          onAddClient={async data => {
+            setSaving(true)
+            try { await addClient(data) }
+            catch (err) { alert(err.message); throw err }
+            finally { setSaving(false) }
+          }}
+          onComplete={dismissOnboarding}
+          onSkip={dismissOnboarding}
+        />
+      )}
+
       {deleteConfirm && confirmMsg && (
         <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setDeleteConfirm(null) }}>
           <div className="modal">

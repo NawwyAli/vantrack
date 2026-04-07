@@ -6,7 +6,7 @@ const ROLES = [
   { value: 'both', label: '⚡ Both' },
 ]
 
-export default function AuthScreen({ onSignIn, onSignUp, onResetPassword }) {
+export default function AuthScreen({ onSignIn, onSignUp, onResetPassword, onShowLegal }) {
   const [mode, setMode] = useState('login') // 'login' | 'signup' | 'forgot'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -132,6 +132,12 @@ export default function AuthScreen({ onSignIn, onSignUp, onResetPassword }) {
             : mode === 'signup' ? 'Create Account'
             : 'Send Reset Email'}
         </button>
+      </div>
+
+      <div className="legal-footer">
+        <button className="legal-link" onClick={() => onShowLegal('privacy')}>Privacy Policy</button>
+        <span style={{ color: 'var(--text3)' }}>·</span>
+        <button className="legal-link" onClick={() => onShowLegal('terms')}>Terms &amp; Conditions</button>
       </div>
     </div>
   )
