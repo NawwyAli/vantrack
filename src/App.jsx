@@ -87,7 +87,7 @@ export default function App() {
 
   // --- Access check ---
   function getTrialInfo(profile) {
-    if (!profile) return { hasAccess: false, daysLeft: 0, isTrial: false }
+    if (!profile) return { hasAccess: null, daysLeft: 0, isTrial: false }
     if (profile.subscription_status === 'active') return { hasAccess: true, daysLeft: null, isTrial: false }
     if (profile.subscription_status === 'trialing' && profile.trial_ends_at) {
       const daysLeft = Math.ceil((new Date(profile.trial_ends_at) - new Date()) / 86400000)
@@ -97,8 +97,16 @@ export default function App() {
   }
 
   const { hasAccess, daysLeft, isTrial } = getTrialInfo(profile)
+  if (hasAccess === null) {
+    return (
+      <div className="app-loading">
+        <div className="app-loading-icon">🚐</div>
+        <div className="app-loading-text">VanTrack</div>
+      </div>
+    )
+  }
   if (!hasAccess) return <TrialWall user={user} onSignOut={signOut} />
-  const showTrialBanner = isTrial && daysLeft !== null && daysLeft <= 7
+  const showTrialBanner = isTrial && daysLeft !== null && daysLeft > 0
 
   function dismissOnboarding() {
     localStorage.setItem(`vantrack_onboarded_${user.id}`, '1')
@@ -224,7 +232,7 @@ export default function App() {
   const confirmMsg = deleteConfirm ? deleteMessages[deleteConfirm.type] : null
 
   return (
-    <div className="app">
+    <div className={`app${showTrialBanner ? ' has-trial-banner' : ''}`}>
       {showTrialBanner && (
         <div className="trial-banner">
           ⏰ {daysLeft === 1 ? 'Last day' : `${daysLeft} days`} left in your free trial

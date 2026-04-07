@@ -25,8 +25,9 @@ export default function AuthScreen({ onSignIn, onSignUp, onResetPassword, onShow
       setLoading(true)
       try {
         await onResetPassword(email.trim())
+        setMode('login')
+        setError('')
         setSuccess('Password reset email sent — check your inbox.')
-        switchMode('login')
       } catch (err) {
         setError(err.message || 'Something went wrong')
       } finally {
@@ -44,8 +45,9 @@ export default function AuthScreen({ onSignIn, onSignUp, onResetPassword, onShow
         await onSignIn(email.trim(), password)
       } else {
         await onSignUp(email.trim(), password, role)
+        setMode('login')
+        setError('')
         setSuccess('Account created! Check your email to confirm, then log in.')
-        switchMode('login')
       }
     } catch (err) {
       setError(err.message || 'Something went wrong')

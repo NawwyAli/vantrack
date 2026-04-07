@@ -71,7 +71,7 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  min-width: 60px;
+  min-width: 96px;
 }
 
 .back-btn {
@@ -1031,11 +1031,11 @@ html, body, #root {
   text-decoration: underline;
 }
 
-.app:has(.trial-banner) .header {
+.app.has-trial-banner .header {
   top: 33px;
 }
 
-.app:has(.trial-banner) .page {
+.app.has-trial-banner .page {
   padding-top: calc(var(--header-height) + 33px);
 }
 
@@ -1135,7 +1135,7 @@ html, body, #root {
 .legal-link {
   background: none;
   border: none;
-  color: var(--text3);
+  color: var(--text2);
   font-size: 12px;
   cursor: pointer;
   font-family: inherit;
@@ -1143,7 +1143,7 @@ html, body, #root {
 }
 
 .legal-link:hover {
-  color: var(--text2);
+  color: var(--text1);
 }
 
 /* Onboarding */
