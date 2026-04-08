@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 const TRADE_LABELS = {
   gas_engineer: '🔥 Gas Engineer',
@@ -12,6 +12,8 @@ const ROLES = [
   { value: 'both', label: '⚡ Both' },
 ]
 
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
 function ChevronRight() {
   return (
     <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
@@ -20,18 +22,21 @@ function ChevronRight() {
   )
 }
 
-export default function ProfileView({ user, profile, engineerProfile, onSignOut, onResetPassword, onUpdateRole, onSaveEngineerProfile }) {
+export default function ProfileView({ user, profile, engineerProfile, logoDataUrl, onSignOut, onResetPassword, onUpdateRole, onSaveEngineerProfile, onUploadLogo }) {
   const [editingRole, setEditingRole] = useState(false)
   const [selectedRole, setSelectedRole] = useState(profile?.role || '')
   const [savingRole, setSavingRole] = useState(false)
   const [editingBusiness, setEditingBusiness] = useState(false)
   const [savingBusiness, setSavingBusiness] = useState(false)
+  const [logoUploading, setLogoUploading] = useState(false)
+  const [logoError, setLogoError] = useState('')
   const [portalLoading, setPortalLoading] = useState(false)
   const [resetSent, setResetSent] = useState(false)
   const [error, setError] = useState('')
+  const logoInputRef = useRef()
 
-  // Business profile fields
   const ep = engineerProfile || {}
+
   const [biz, setBiz] = useState({
     business_name: ep.business_name || '',
     business_address: ep.business_address || '',
@@ -43,9 +48,11 @@ export default function ProfileView({ user, profile, engineerProfile, onSignOut,
     bank_name: ep.bank_name || '',
     bank_sort_code: ep.bank_sort_code || '',
     bank_account_number: ep.bank_account_number || '',
+    working_days: ep.working_days || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    working_hours_start: ep.working_hours_start || '08:00',
+    working_hours_end: ep.working_hours_end || '17:00',
   })
 
-  // Keep biz in sync with engineerProfile when it loads/changes
   function openBusiness() {
     setBiz({
       business_name: ep.business_name || '',
@@ -58,8 +65,20 @@ export default function ProfileView({ user, profile, engineerProfile, onSignOut,
       bank_name: ep.bank_name || '',
       bank_sort_code: ep.bank_sort_code || '',
       bank_account_number: ep.bank_account_number || '',
+      working_days: ep.working_days || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      working_hours_start: ep.working_hours_start || '08:00',
+      working_hours_end: ep.working_hours_end || '17:00',
     })
     setEditingBusiness(true)
+  }
+
+  function toggleDay(day) {
+    setBiz(p => ({
+      ...p,
+      working_days: p.working_days.includes(day)
+        ? p.working_days.filter(d => d !== day)
+        : [...p.working_days, day],
+    }))
   }
 
   function getSubscriptionBadge() {
@@ -88,6 +107,21 @@ export default function ProfileView({ user, profile, engineerProfile, onSignOut,
     finally { setSavingBusiness(false) }
   }
 
+  async function handleLogoUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setLogoUploading(true)
+    setLogoError('')
+    try {
+      await onUploadLogo(file)
+    } catch (err) {
+      setLogoError('Upload failed — ensure the "logos" storage bucket exists in Supabase.')
+    } finally {
+      setLogoUploading(false)
+      e.target.value = ''
+    }
+  }
+
   async function handleResetPassword() {
     try { await onResetPassword(user.email); setResetSent(true) }
     catch (err) { setError(err.message) }
@@ -106,6 +140,13 @@ export default function ProfileView({ user, profile, engineerProfile, onSignOut,
     } catch (err) { setError(err.message); setPortalLoading(false) }
   }
 
+  const fmtWorkingHours = () => {
+    const days = ep.working_days?.join(', ') || 'Mon–Fri'
+    const start = ep.working_hours_start || '08:00'
+    const end = ep.working_hours_end || '17:00'
+    return `${days} · ${start}–${end}`
+  }
+
   return (
     <div className="page">
       <div className="profile-section">
@@ -114,6 +155,25 @@ export default function ProfileView({ user, profile, engineerProfile, onSignOut,
       </div>
 
       {error && <div className="auth-error" style={{ margin: '0 16px 12px' }}>{error}</div>}
+
+      {/* Logo */}
+      <div className="settings-group">
+        <div className="settings-label">Business Logo</div>
+        <div className="settings-row" style={{ cursor: 'pointer' }} onClick={() => !logoUploading && logoInputRef.current?.click()}>
+          {logoDataUrl ? (
+            <img src={logoDataUrl} alt="Business logo"
+              style={{ width: 44, height: 44, objectFit: 'contain', borderRadius: '8px', background: 'var(--surface2)' }} />
+          ) : (
+            <span style={{ fontSize: '13px', color: 'var(--text3)' }}>No logo — appears on quotes &amp; invoices</span>
+          )}
+          <span style={{ fontSize: '12px', color: 'var(--blue)', fontWeight: 500 }}>
+            {logoUploading ? 'Uploading…' : logoDataUrl ? 'Change' : 'Upload'}
+          </span>
+        </div>
+        <input ref={logoInputRef} type="file" accept="image/png,image/jpeg"
+          style={{ display: 'none' }} onChange={handleLogoUpload} />
+        {logoError && <div className="auth-error" style={{ margin: '0 16px 8px', fontSize: '13px' }}>{logoError}</div>}
+      </div>
 
       {/* Business Details */}
       <div className="settings-group">
@@ -164,6 +224,30 @@ export default function ProfileView({ user, profile, engineerProfile, onSignOut,
               </div>
             ))}
 
+            {/* Working hours */}
+            <div className="form-section-label" style={{ marginTop: '12px', marginBottom: '8px' }}>Working Hours</div>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '10px' }}>
+              {DAYS.map(day => (
+                <button key={day} type="button"
+                  className={`filter-chip${biz.working_days.includes(day) ? ' active' : ''}`}
+                  onClick={() => toggleDay(day)}>
+                  {day}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+              <div className="form-group">
+                <label className="form-label">Start time</label>
+                <input className="form-input" type="time" value={biz.working_hours_start}
+                  onChange={e => setBiz(p => ({ ...p, working_hours_start: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">End time</label>
+                <input className="form-input" type="time" value={biz.working_hours_end}
+                  onChange={e => setBiz(p => ({ ...p, working_hours_end: e.target.value }))} />
+              </div>
+            </div>
+
             <div className="form-actions" style={{ marginTop: '16px' }}>
               <button className="btn btn-ghost" onClick={() => setEditingBusiness(false)}>Cancel</button>
               <button className="btn btn-primary" onClick={handleSaveBusiness} disabled={savingBusiness}>
@@ -172,10 +256,17 @@ export default function ProfileView({ user, profile, engineerProfile, onSignOut,
             </div>
           </div>
         ) : (
-          <button className="settings-row settings-row-btn" onClick={openBusiness}>
-            <span>{ep.business_name || <span style={{ color: 'var(--text3)' }}>Not set — appears on PDFs</span>}</span>
-            <ChevronRight />
-          </button>
+          <>
+            <button className="settings-row settings-row-btn" onClick={openBusiness}>
+              <span>{ep.business_name || <span style={{ color: 'var(--text3)' }}>Not set — appears on PDFs</span>}</span>
+              <ChevronRight />
+            </button>
+            {ep.working_days && (
+              <div className="settings-row" style={{ cursor: 'default' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text3)' }}>{fmtWorkingHours()}</span>
+              </div>
+            )}
+          </>
         )}
       </div>
 

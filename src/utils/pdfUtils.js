@@ -23,22 +23,34 @@ function addEngineerHeader(doc, ep, docType, docNumber, docDate, validUntil) {
   doc.setFillColor(...ACCENT)
   doc.rect(0, 0, pageW, 8, 'F')
 
+  // Logo (if present)
+  let textX = 16
+  if (ep.logoDataUrl) {
+    try {
+      const fmt = ep.logoDataUrl.startsWith('data:image/png') ? 'PNG' : 'JPEG'
+      doc.addImage(ep.logoDataUrl, fmt, 14, 11, 22, 22)
+      textX = 42
+    } catch {
+      // ignore logo errors — fall back to text-only layout
+    }
+  }
+
   // Business name
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(20)
   doc.setTextColor(...DARK)
-  doc.text(ep.business_name || 'Your Business Name', 16, 24)
+  doc.text(ep.business_name || 'Your Business Name', textX, 24)
 
-  // Business details (left column)
+  // Business details
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9)
   doc.setTextColor(...MID)
   let y = 31
-  if (ep.business_address) { doc.text(ep.business_address, 16, y); y += 5 }
-  if (ep.phone) { doc.text(ep.phone, 16, y); y += 5 }
-  if (ep.email) { doc.text(ep.email, 16, y); y += 5 }
-  if (ep.gas_safe_number) { doc.text(`Gas Safe Reg: ${ep.gas_safe_number}`, 16, y); y += 5 }
-  if (ep.vat_registered && ep.vat_number) { doc.text(`VAT No: ${ep.vat_number}`, 16, y) }
+  if (ep.business_address) { doc.text(ep.business_address, textX, y); y += 5 }
+  if (ep.phone) { doc.text(ep.phone, textX, y); y += 5 }
+  if (ep.email) { doc.text(ep.email, textX, y); y += 5 }
+  if (ep.gas_safe_number) { doc.text(`Gas Safe Reg: ${ep.gas_safe_number}`, textX, y); y += 5 }
+  if (ep.vat_registered && ep.vat_number) { doc.text(`VAT No: ${ep.vat_number}`, textX, y) }
 
   // Document type block (right)
   doc.setFillColor(245, 245, 247)
@@ -178,8 +190,9 @@ function addFooter(doc) {
 
 export function generateQuotePdf(quote, client, engineerProfile) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  const ep = engineerProfile || {}
 
-  let y = addEngineerHeader(doc, engineerProfile, 'Quote', quote.quote_number, quote.created_at?.slice(0, 10), quote.valid_until)
+  let y = addEngineerHeader(doc, ep, 'Quote', quote.quote_number, quote.created_at?.slice(0, 10), quote.valid_until)
   y = addClientBlock(doc, client, y)
   y = addLineItems(doc, quote.line_items, y + 4)
   y = addTotals(doc, quote.subtotal, quote.vat_rate, quote.vat_amount, quote.total, y)
@@ -229,16 +242,11 @@ function addPaidStamp(doc) {
   doc.restoreGraphicsState()
 }
 
-// Invoice PDF — includes bank details + PAID watermark
 export function generateInvoicePdf(invoice, client, engineerProfile) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const ep = engineerProfile || {}
 
   let y = addEngineerHeader(doc, ep, 'Invoice', invoice.invoice_number, invoice.created_at?.slice(0, 10), invoice.due_date ? invoice.due_date : null)
-
-  // Swap "Valid until" label to "Due date" — header already printed, just override text label
-  // (header renders "Valid until" text from addEngineerHeader — acceptable for now)
-
   y = addClientBlock(doc, client, y)
   y = addLineItems(doc, invoice.line_items, y + 4)
   y = addTotals(doc, invoice.subtotal, invoice.vat_rate, invoice.vat_amount, invoice.total, y)

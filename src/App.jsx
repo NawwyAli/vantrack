@@ -50,7 +50,8 @@ export default function App() {
     deleteInvoice, duplicateInvoice,
     invoiceDataFromJob, invoiceDataFromQuote,
   } = useInvoices(user)
-  const { engineerProfile, saveEngineerProfile } = useEngineerProfile(user)
+  const { engineerProfile, logoDataUrl, saveEngineerProfile, uploadLogo } = useEngineerProfile(user)
+  const enrichedProfile = engineerProfile ? { ...engineerProfile, logoDataUrl } : engineerProfile
 
   const [view, setView] = useState('dashboard')
   const [selectedClientId, setSelectedClientId] = useState(null)
@@ -515,10 +516,12 @@ export default function App() {
           user={user}
           profile={profile}
           engineerProfile={engineerProfile}
+          logoDataUrl={logoDataUrl}
           onSignOut={signOut}
           onResetPassword={resetPassword}
           onUpdateRole={updateRole}
           onSaveEngineerProfile={saveEngineerProfile}
+          onUploadLogo={uploadLogo}
         />
       )}
 
@@ -624,7 +627,7 @@ export default function App() {
         <QuoteDetail
           quote={quotes.find(q => q.id === selectedQuote.id) || selectedQuote}
           clients={clients}
-          engineerProfile={engineerProfile}
+          engineerProfile={enrichedProfile}
           onClose={() => setSelectedQuote(null)}
           onEdit={() => { setEditingQuote(selectedQuote); setSelectedQuote(null); setQuoteFormOpen(true) }}
           onDelete={handleDeleteQuote}
@@ -651,7 +654,7 @@ export default function App() {
         <InvoiceDetail
           invoice={invoices.find(i => i.id === selectedInvoice.id) || selectedInvoice}
           clients={clients}
-          engineerProfile={engineerProfile}
+          engineerProfile={enrichedProfile}
           onClose={() => setSelectedInvoice(null)}
           onEdit={() => { setEditingInvoice(selectedInvoice); setSelectedInvoice(null); setInvoiceFormOpen(true) }}
           onDelete={handleDeleteInvoice}
