@@ -40,6 +40,18 @@ export function useEngineerProfile(user) {
     await fetchEngineerProfile()
   }
 
+  async function generateBookingSlug() {
+    const base = (engineerProfile?.business_name || user.email.split('@')[0])
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 20)
+    const rand = Math.random().toString(36).slice(2, 6)
+    const slug = `${base}-${rand}`
+    await saveEngineerProfile({ booking_slug: slug, booking_enabled: true })
+    return slug
+  }
+
   async function uploadLogo(file) {
     const ext = file.name.split('.').pop().toLowerCase()
     const path = `${user.id}/logo.${ext}`
@@ -51,5 +63,5 @@ export function useEngineerProfile(user) {
     await saveEngineerProfile({ logo_url: urlData.publicUrl })
   }
 
-  return { engineerProfile, epLoading, logoDataUrl, saveEngineerProfile, uploadLogo, refreshEngineerProfile: fetchEngineerProfile }
+  return { engineerProfile, epLoading, logoDataUrl, saveEngineerProfile, uploadLogo, generateBookingSlug, refreshEngineerProfile: fetchEngineerProfile }
 }

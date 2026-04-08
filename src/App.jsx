@@ -5,6 +5,7 @@ import { useJobs } from './hooks/useJobs.js'
 import { useQuotes } from './hooks/useQuotes.js'
 import { useInvoices } from './hooks/useInvoices.js'
 import { useEngineerProfile } from './hooks/useEngineerProfile.js'
+import { useBookingRequests } from './hooks/useBookingRequests.js'
 
 import AuthScreen from './components/AuthScreen.jsx'
 import TrialWall from './components/TrialWall.jsx'
@@ -28,6 +29,7 @@ import QuoteDetail from './components/QuoteDetail.jsx'
 import InvoicesView from './components/InvoicesView.jsx'
 import InvoiceForm from './components/InvoiceForm.jsx'
 import InvoiceDetail from './components/InvoiceDetail.jsx'
+import BookingRequestsView from './components/BookingRequestsView.jsx'
 
 export default function App() {
   const { user, profile, loading: authLoading, signIn, signUp, signOut, resetPassword, refreshProfile, updateRole } = useAuth()
@@ -50,8 +52,9 @@ export default function App() {
     deleteInvoice, duplicateInvoice,
     invoiceDataFromJob, invoiceDataFromQuote,
   } = useInvoices(user)
-  const { engineerProfile, logoDataUrl, saveEngineerProfile, uploadLogo } = useEngineerProfile(user)
+  const { engineerProfile, logoDataUrl, saveEngineerProfile, uploadLogo, generateBookingSlug } = useEngineerProfile(user)
   const enrichedProfile = engineerProfile ? { ...engineerProfile, logoDataUrl } : engineerProfile
+  const { requests: bookingRequests, loading: requestsLoading, updateRequestStatus, deleteRequest: deleteBookingRequest } = useBookingRequests(user)
 
   const [view, setView] = useState('dashboard')
   const [selectedClientId, setSelectedClientId] = useState(null)
@@ -70,7 +73,8 @@ export default function App() {
   const [selectedJob, setSelectedJob] = useState(null)
   const [jobFormClientId, setJobFormClientId] = useState(null)
   const [jobFormDate, setJobFormDate] = useState(null)
-  const [workTab, setWorkTab] = useState('jobs') // 'jobs' | 'quotes'
+  const [workTab, setWorkTab] = useState('jobs') // 'jobs' | 'quotes' | 'invoices' | 'requests'
+  const [bookingPrefill, setBookingPrefill] = useState(null)
   const [quoteFormOpen, setQuoteFormOpen] = useState(false)
   const [editingQuote, setEditingQuote] = useState(null)
   const [selectedQuote, setSelectedQuote] = useState(null)
@@ -364,6 +368,29 @@ export default function App() {
     setInvoiceFormOpen(true)
   }
 
+  // --- Booking request handlers ---
+
+  async function handleAcceptBooking(request) {
+    try { await updateRequestStatus(request.id, 'accepted') } catch {}
+    setEditingJob(null)
+    setBookingPrefill({
+      description: request.description,
+      date: request.preferred_date || new Date().toISOString().split('T')[0],
+      notes: [
+        `Booking request from: ${request.client_name}`,
+        request.client_email && `Email: ${request.client_email}`,
+        request.client_phone && `Phone: ${request.client_phone}`,
+        request.message && `Message: ${request.message}`,
+      ].filter(Boolean).join('\n'),
+    })
+    setWorkTab('jobs')
+    setJobFormOpen(true)
+  }
+
+  async function handleDeclineBooking(id) {
+    try { await updateRequestStatus(id, 'declined') } catch (err) { alert(err.message) }
+  }
+
   function handleCreateQuoteFromJob(job) {
     setSelectedJob(null)
     setEditingQuote(null)
@@ -510,6 +537,18 @@ export default function App() {
               engineerProfile={engineerProfile}
             />
           }
+          requestsSlot={
+            <BookingRequestsView
+              requests={bookingRequests}
+              loading={requestsLoading}
+              onAccept={handleAcceptBooking}
+              onDecline={handleDeclineBooking}
+              onDelete={deleteBookingRequest}
+              bookingEnabled={!!engineerProfile?.booking_enabled}
+              bookingUrl={engineerProfile?.booking_slug ? `${window.location.origin}/book/${engineerProfile.booking_slug}` : null}
+            />
+          }
+          pendingRequestsCount={bookingRequests.filter(r => r.status === 'pending').length}
         />
       )}
 
@@ -524,6 +563,7 @@ export default function App() {
           onUpdateRole={updateRole}
           onSaveEngineerProfile={saveEngineerProfile}
           onUploadLogo={uploadLogo}
+          onGenerateBookingSlug={generateBookingSlug}
         />
       )}
 
@@ -588,12 +628,14 @@ export default function App() {
           clients={clients}
           job={editingJob
             ? editingJob
-            : (jobFormClientId || jobFormDate)
-              ? { clientId: jobFormClientId || '', date: jobFormDate || undefined }
-              : null}
+            : bookingPrefill
+              ? bookingPrefill
+              : (jobFormClientId || jobFormDate)
+                ? { clientId: jobFormClientId || '', date: jobFormDate || undefined }
+                : null}
           saving={saving}
           onSubmit={editingJob ? data => handleUpdateJob(editingJob.id, data) : handleAddJob}
-          onClose={() => { setJobFormOpen(false); setEditingJob(null); setJobFormClientId(null); setJobFormDate(null) }}
+          onClose={() => { setJobFormOpen(false); setEditingJob(null); setJobFormClientId(null); setJobFormDate(null); setBookingPrefill(null) }}
         />
       )}
 

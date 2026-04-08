@@ -40,7 +40,7 @@ function ListIcon({ active }) {
   )
 }
 
-export default function JobsView({ jobs, clients, loading, onJobClick, onAddJob, workTab, onWorkTabChange, quotesSlot, invoicesSlot }) {
+export default function JobsView({ jobs, clients, loading, onJobClick, onAddJob, workTab, onWorkTabChange, quotesSlot, invoicesSlot, requestsSlot, pendingRequestsCount }) {
   const [filter, setFilter] = useState('active')
   const [clientFilter, setClientFilter] = useState('')
   const [calendarMode, setCalendarMode] = useState(false)
@@ -67,6 +67,9 @@ export default function JobsView({ jobs, clients, loading, onJobClick, onAddJob,
       <button className={`work-segment${workTab === 'jobs' ? ' active' : ''}`} onClick={() => onWorkTabChange('jobs')}>Jobs</button>
       <button className={`work-segment${workTab === 'quotes' ? ' active' : ''}`} onClick={() => onWorkTabChange('quotes')}>Quotes</button>
       <button className={`work-segment${workTab === 'invoices' ? ' active' : ''}`} onClick={() => onWorkTabChange('invoices')}>Invoices</button>
+      <button className={`work-segment${workTab === 'requests' ? ' active' : ''}`} onClick={() => onWorkTabChange('requests')}>
+        Requests{pendingRequestsCount > 0 ? ` (${pendingRequestsCount})` : ''}
+      </button>
     </div>
   )
 
@@ -76,6 +79,10 @@ export default function JobsView({ jobs, clients, loading, onJobClick, onAddJob,
 
   if (workTab === 'invoices') {
     return <div className="page">{segmentBar}{invoicesSlot}</div>
+  }
+
+  if (workTab === 'requests') {
+    return <div className="page">{segmentBar}{requestsSlot}</div>
   }
 
   return (

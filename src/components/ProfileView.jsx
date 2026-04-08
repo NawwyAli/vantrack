@@ -22,7 +22,7 @@ function ChevronRight() {
   )
 }
 
-export default function ProfileView({ user, profile, engineerProfile, logoDataUrl, onSignOut, onResetPassword, onUpdateRole, onSaveEngineerProfile, onUploadLogo }) {
+export default function ProfileView({ user, profile, engineerProfile, logoDataUrl, onSignOut, onResetPassword, onUpdateRole, onSaveEngineerProfile, onUploadLogo, onGenerateBookingSlug }) {
   const [editingRole, setEditingRole] = useState(false)
   const [selectedRole, setSelectedRole] = useState(profile?.role || '')
   const [savingRole, setSavingRole] = useState(false)
@@ -30,6 +30,11 @@ export default function ProfileView({ user, profile, engineerProfile, logoDataUr
   const [savingBusiness, setSavingBusiness] = useState(false)
   const [logoUploading, setLogoUploading] = useState(false)
   const [logoError, setLogoError] = useState('')
+  const [bookingTogglingOn, setBookingTogglingOn] = useState(false)
+  const [bookingDescSaving, setBookingDescSaving] = useState(false)
+  const [bookingDesc, setBookingDesc] = useState(ep.booking_description || '')
+  const [bookingDescEditing, setBookingDescEditing] = useState(false)
+  const [copied, setCopied] = useState(false)
   const [portalLoading, setPortalLoading] = useState(false)
   const [resetSent, setResetSent] = useState(false)
   const [error, setError] = useState('')
@@ -266,6 +271,85 @@ export default function ProfileView({ user, profile, engineerProfile, logoDataUr
                 <span style={{ fontSize: '12px', color: 'var(--text3)' }}>{fmtWorkingHours()}</span>
               </div>
             )}
+          </>
+        )}
+      </div>
+
+      {/* Booking Link */}
+      <div className="settings-group">
+        <div className="settings-label">Booking Link</div>
+        {!ep.booking_slug ? (
+          <button className="settings-row settings-row-btn" onClick={async () => {
+            setBookingTogglingOn(true)
+            try { await onGenerateBookingSlug() } catch {}
+            finally { setBookingTogglingOn(false) }
+          }} disabled={bookingTogglingOn}>
+            <span style={{ color: 'var(--blue)' }}>{bookingTogglingOn ? 'Activating…' : 'Enable Online Booking'}</span>
+            <ChevronRight />
+          </button>
+        ) : (
+          <>
+            {/* Enable / disable toggle */}
+            <div className="settings-row" style={{ cursor: 'default' }}>
+              <span>Booking enabled</span>
+              <button type="button" className={`toggle-btn${ep.booking_enabled ? ' on' : ''}`}
+                onClick={() => onSaveEngineerProfile({ booking_enabled: !ep.booking_enabled })}>
+                <span className="toggle-knob" />
+              </button>
+            </div>
+            {/* URL + copy */}
+            {ep.booking_enabled && (
+              <div className="settings-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '6px', cursor: 'default' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text3)' }}>Your booking link</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+                  <div style={{ flex: 1, fontSize: '12px', color: 'var(--blue)', wordBreak: 'break-all', lineHeight: 1.4 }}>
+                    {`${window.location.origin}/book/${ep.booking_slug}`}
+                  </div>
+                  <button className="btn btn-ghost btn-sm" style={{ flexShrink: 0 }} onClick={() => {
+                    navigator.clipboard?.writeText(`${window.location.origin}/book/${ep.booking_slug}`)
+                    setCopied(true)
+                    setTimeout(() => setCopied(false), 2000)
+                  }}>
+                    {copied ? '✓ Copied' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+            )}
+            {/* Custom description */}
+            <div style={{ padding: '8px 16px 12px' }}>
+              <div className="form-label" style={{ marginBottom: '6px' }}>
+                Booking page message <span style={{ color: 'var(--text3)' }}>(optional)</span>
+              </div>
+              {bookingDescEditing ? (
+                <>
+                  <textarea className="form-input" rows={3}
+                    placeholder="e.g. Based in Manchester. Covering all gas & heating work."
+                    value={bookingDesc}
+                    onChange={e => setBookingDesc(e.target.value)}
+                    style={{ resize: 'vertical', minHeight: '72px', marginBottom: '8px' }} />
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn btn-ghost btn-sm" onClick={() => { setBookingDescEditing(false); setBookingDesc(ep.booking_description || '') }}>Cancel</button>
+                    <button className="btn btn-primary btn-sm" disabled={bookingDescSaving} onClick={async () => {
+                      setBookingDescSaving(true)
+                      try { await onSaveEngineerProfile({ booking_description: bookingDesc }); setBookingDescEditing(false) } catch {}
+                      finally { setBookingDescSaving(false) }
+                    }}>
+                      {bookingDescSaving ? 'Saving…' : 'Save'}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <button className="settings-row settings-row-btn" style={{ margin: 0, padding: '6px 0', background: 'transparent', border: 'none', width: '100%', justifyContent: 'space-between' }}
+                  onClick={() => { setBookingDesc(ep.booking_description || ''); setBookingDescEditing(true) }}>
+                  <span style={{ fontSize: '13px', color: ep.booking_description ? 'var(--text2)' : 'var(--text3)' }}>
+                    {ep.booking_description || 'Add a message for clients…'}
+                  </span>
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                    <path d="M14.5 2.5L17.5 5.5L7 16H4V13L14.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              )}
+            </div>
           </>
         )}
       </div>
