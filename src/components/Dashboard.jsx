@@ -1,6 +1,10 @@
+import { useState } from 'react'
 import { getCertStatus, getDaysLabel, fmtDate, getExpiryDate } from '../utils.js'
+import AnalyticsView from './AnalyticsView.jsx'
 
-export default function Dashboard({ clients, loading, onRenew, onClientClick, onAddCert, invoices, onGoToInvoices }) {
+export default function Dashboard({ clients, loading, onRenew, onClientClick, onAddCert, invoices, onGoToInvoices, jobs, onJobClick }) {
+  const [tab, setTab] = useState('overview')
+
   if (loading) {
     return (
       <div className="page">
@@ -10,6 +14,30 @@ export default function Dashboard({ clients, loading, onRenew, onClientClick, on
       </div>
     )
   }
+
+  const segmentBar = (
+    <div className="work-segment-bar">
+      <button className={`work-segment${tab === 'overview' ? ' active' : ''}`} onClick={() => setTab('overview')}>Overview</button>
+      <button className={`work-segment${tab === 'analytics' ? ' active' : ''}`} onClick={() => setTab('analytics')}>Analytics</button>
+    </div>
+  )
+
+  if (tab === 'analytics') {
+    return (
+      <div className="page">
+        {segmentBar}
+        <AnalyticsView
+          jobs={jobs || []}
+          invoices={invoices || []}
+          clients={clients}
+          onJobClick={onJobClick}
+        />
+      </div>
+    )
+  }
+
+  // ── Overview tab ──
+
   // Flatten all properties across all clients
   const allEntries = []
   for (const client of clients) {
@@ -18,13 +46,12 @@ export default function Dashboard({ clients, loading, onRenew, onClientClick, on
     }
   }
 
-  // Count by status (total = all properties with a cert)
+  // Count by status
   const totalCerts = allEntries.filter(e => e.property.certificate).length
   const redCount = allEntries.filter(e => getCertStatus(e.property.certificate?.issueDate) === 'red').length
   const amberCount = allEntries.filter(e => getCertStatus(e.property.certificate?.issueDate) === 'amber').length
   const greenCount = allEntries.filter(e => getCertStatus(e.property.certificate?.issueDate) === 'green').length
 
-  // Sort: red, amber, green, none
   const statusOrder = { red: 0, amber: 1, green: 2, none: 3 }
   const sorted = [...allEntries].sort((a, b) => {
     const sa = getCertStatus(a.property.certificate?.issueDate)
@@ -49,6 +76,7 @@ export default function Dashboard({ clients, loading, onRenew, onClientClick, on
   if (clients.length === 0) {
     return (
       <div className="page">
+        {segmentBar}
         <div className="page-content">
           <div className="empty-state">
             <div className="empty-icon">🚐</div>
@@ -62,6 +90,7 @@ export default function Dashboard({ clients, loading, onRenew, onClientClick, on
 
   return (
     <div className="page">
+      {segmentBar}
       <div className="page-content">
         {/* Outstanding invoices banner */}
         {invoices && (() => {
@@ -112,7 +141,6 @@ export default function Dashboard({ clients, loading, onRenew, onClientClick, on
               <div className="section-header">{groupLabels[status]}</div>
               {items.map(({ client, property }) => {
                 const issueDate = property.certificate?.issueDate
-                const expiryDate = issueDate ? getExpiryDate(issueDate) : null
                 const daysLabel = getDaysLabel(issueDate)
                 const hasCert = !!property.certificate
 

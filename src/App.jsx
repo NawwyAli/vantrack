@@ -475,6 +475,8 @@ export default function App() {
           onAddCert={(clientId, propertyId) => setCertModal({ clientId, propertyId })}
           invoices={invoices}
           onGoToInvoices={() => { setView('jobs'); setWorkTab('invoices') }}
+          jobs={jobs}
+          onJobClick={job => { setView('jobs'); setWorkTab('jobs'); setSelectedJob(job) }}
         />
       )}
 
