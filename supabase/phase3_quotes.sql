@@ -15,9 +15,6 @@ create table if not exists engineer_profiles (
   bank_account_number text,
   bank_name text,
   logo_url text,
-  working_days text[] default array['Mon','Tue','Wed','Thu','Fri'],
-  working_hours_start text default '08:00',
-  working_hours_end text default '18:00',
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -34,8 +31,8 @@ create table if not exists quotes (
   client_id uuid references clients(id) on delete cascade not null,
   job_id uuid references jobs(id) on delete set null,
   quote_number text not null,
-  status text not null default 'draft',   -- draft, sent, accepted, declined
-  line_items jsonb not null default '[]', -- [{description, qty, unit_price, total}]
+  status text not null default 'draft',
+  line_items jsonb not null default '[]',
   subtotal decimal(10,2) not null default 0,
   vat_rate decimal(5,2) not null default 0,
   vat_amount decimal(10,2) not null default 0,
