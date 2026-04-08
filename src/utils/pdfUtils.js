@@ -193,3 +193,65 @@ export function quoteToBase64(quote, client, engineerProfile) {
   const doc = generateQuotePdf(quote, client, engineerProfile)
   return doc.output('datauristring').split(',')[1]
 }
+
+function addBankDetails(doc, ep, startY) {
+  if (!ep.bank_account_number && !ep.bank_sort_code) return startY
+  const pageW = doc.internal.pageSize.getWidth()
+
+  doc.setFillColor(245, 245, 247)
+  doc.roundedRect(16, startY, pageW - 32, 28, 3, 3, 'F')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(9)
+  doc.setTextColor(...MID)
+  doc.text('PAYMENT — BACS BANK TRANSFER', 22, startY + 8)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(...DARK)
+  let x = 22
+  let y = startY + 15
+  if (ep.bank_name) { doc.text(`Bank: ${ep.bank_name}`, x, y); x += 60 }
+  if (ep.bank_sort_code) { doc.text(`Sort Code: ${ep.bank_sort_code}`, x, y); x += 55 }
+  if (ep.bank_account_number) { doc.text(`Account: ${ep.bank_account_number}`, x, y) }
+
+  return startY + 34
+}
+
+function addPaidStamp(doc) {
+  const pageW = doc.internal.pageSize.getWidth()
+  const pageH = doc.internal.pageSize.getHeight()
+  doc.saveGraphicsState()
+  doc.setGState(new doc.GState({ opacity: 0.12 }))
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(72)
+  doc.setTextColor(52, 199, 89)
+  doc.text('PAID', pageW / 2, pageH / 2, { align: 'center', angle: 35 })
+  doc.restoreGraphicsState()
+}
+
+// Invoice PDF — includes bank details + PAID watermark
+export function generateInvoicePdf(invoice, client, engineerProfile) {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  const ep = engineerProfile || {}
+
+  let y = addEngineerHeader(doc, ep, 'Invoice', invoice.invoice_number, invoice.created_at?.slice(0, 10), invoice.due_date ? invoice.due_date : null)
+
+  // Swap "Valid until" label to "Due date" — header already printed, just override text label
+  // (header renders "Valid until" text from addEngineerHeader — acceptable for now)
+
+  y = addClientBlock(doc, client, y)
+  y = addLineItems(doc, invoice.line_items, y + 4)
+  y = addTotals(doc, invoice.subtotal, invoice.vat_rate, invoice.vat_amount, invoice.total, y)
+  y = addNotes(doc, invoice.notes, y)
+  y = addBankDetails(doc, ep, y + 4)
+
+  if (invoice.status === 'paid') addPaidStamp(doc)
+
+  addFooter(doc)
+  return doc
+}
+
+export function invoiceToBase64(invoice, client, engineerProfile) {
+  const doc = generateInvoicePdf(invoice, client, engineerProfile)
+  return doc.output('datauristring').split(',')[1]
+}

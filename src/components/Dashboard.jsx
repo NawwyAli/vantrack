@@ -1,6 +1,6 @@
 import { getCertStatus, getDaysLabel, fmtDate, getExpiryDate } from '../utils.js'
 
-export default function Dashboard({ clients, loading, onRenew, onClientClick, onAddCert }) {
+export default function Dashboard({ clients, loading, onRenew, onClientClick, onAddCert, invoices, onGoToInvoices }) {
   if (loading) {
     return (
       <div className="page">
@@ -63,6 +63,26 @@ export default function Dashboard({ clients, loading, onRenew, onClientClick, on
   return (
     <div className="page">
       <div className="page-content">
+        {/* Outstanding invoices banner */}
+        {invoices && (() => {
+          const now = new Date()
+          const outstanding = invoices.filter(i => i.status === 'sent')
+          const overdue = invoices.filter(i => i.status === 'sent' && i.dueDate && new Date(i.dueDate) < now)
+          const total = outstanding.reduce((s, i) => s + i.total, 0)
+          if (outstanding.length === 0) return null
+          return (
+            <div className="invoice-dashboard-banner" onClick={onGoToInvoices}>
+              <div>
+                <div className="invoice-dashboard-label">Outstanding Invoices</div>
+                <div className="invoice-dashboard-sub">
+                  {outstanding.length} unpaid{overdue.length > 0 ? ` · ${overdue.length} overdue` : ''}
+                </div>
+              </div>
+              <div className="invoice-dashboard-amount">£{total.toFixed(2)}</div>
+            </div>
+          )
+        })()}
+
         {/* Stats */}
         <div className="stats-grid">
           <div className="stat-card">

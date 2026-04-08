@@ -3,6 +3,7 @@ import { useAuth } from './hooks/useAuth.js'
 import { useData } from './hooks/useData.js'
 import { useJobs } from './hooks/useJobs.js'
 import { useQuotes } from './hooks/useQuotes.js'
+import { useInvoices } from './hooks/useInvoices.js'
 import { useEngineerProfile } from './hooks/useEngineerProfile.js'
 
 import AuthScreen from './components/AuthScreen.jsx'
@@ -24,6 +25,9 @@ import JobDetail from './components/JobDetail.jsx'
 import QuotesView from './components/QuotesView.jsx'
 import QuoteForm from './components/QuoteForm.jsx'
 import QuoteDetail from './components/QuoteDetail.jsx'
+import InvoicesView from './components/InvoicesView.jsx'
+import InvoiceForm from './components/InvoiceForm.jsx'
+import InvoiceDetail from './components/InvoiceDetail.jsx'
 
 export default function App() {
   const { user, profile, loading: authLoading, signIn, signUp, signOut, resetPassword, refreshProfile, updateRole } = useAuth()
@@ -40,6 +44,12 @@ export default function App() {
     addNote, deleteNote, fetchNotes,
   } = useJobs(user)
   const { quotes, loading: quotesLoading, addQuote, updateQuote, updateQuoteStatus, deleteQuote, duplicateQuote } = useQuotes(user)
+  const {
+    invoices, loading: invoicesLoading,
+    addInvoice, updateInvoice, updateInvoiceStatus, savePaymentLink,
+    deleteInvoice, duplicateInvoice,
+    invoiceDataFromJob, invoiceDataFromQuote,
+  } = useInvoices(user)
   const { engineerProfile, saveEngineerProfile } = useEngineerProfile(user)
 
   const [view, setView] = useState('dashboard')
@@ -64,6 +74,11 @@ export default function App() {
   const [selectedQuote, setSelectedQuote] = useState(null)
   const [quoteFilter, setQuoteFilter] = useState('all')
   const [quoteFormJobId, setQuoteFormJobId] = useState(null)
+  const [invoiceFormOpen, setInvoiceFormOpen] = useState(false)
+  const [editingInvoice, setEditingInvoice] = useState(null)
+  const [selectedInvoice, setSelectedInvoice] = useState(null)
+  const [invoiceFilter, setInvoiceFilter] = useState('all')
+  const [prefillInvoice, setPrefillInvoice] = useState(null)
 
   async function handleSubscribe() {
     setSubscribing(true)
@@ -300,6 +315,52 @@ export default function App() {
     finally { setSaving(false) }
   }
 
+  // --- Invoice handlers ---
+
+  async function handleAddInvoice(data) {
+    setSaving(true)
+    try { await addInvoice(data); setInvoiceFormOpen(false); setPrefillInvoice(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  async function handleUpdateInvoice(id, data) {
+    setSaving(true)
+    try { await updateInvoice(id, data); setInvoiceFormOpen(false); setEditingInvoice(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  async function handleDeleteInvoice(id) {
+    setSaving(true)
+    try { await deleteInvoice(id); setSelectedInvoice(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  async function handleDuplicateInvoice(invoice) {
+    setSaving(true)
+    try { await duplicateInvoice(invoice); setSelectedInvoice(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  function handleCreateInvoiceFromJob(job) {
+    setSelectedJob(null)
+    setEditingInvoice(null)
+    setPrefillInvoice(invoiceDataFromJob(job))
+    setWorkTab('invoices')
+    setInvoiceFormOpen(true)
+  }
+
+  function handleConvertQuoteToInvoice(quote) {
+    setSelectedQuote(null)
+    setEditingInvoice(null)
+    setPrefillInvoice(invoiceDataFromQuote(quote))
+    setWorkTab('invoices')
+    setInvoiceFormOpen(true)
+  }
+
   function handleCreateQuoteFromJob(job) {
     setSelectedJob(null)
     setEditingQuote(null)
@@ -382,6 +443,8 @@ export default function App() {
           onRenew={(clientId, propertyId) => setCertModal({ clientId, propertyId })}
           onClientClick={handleClientClick}
           onAddCert={(clientId, propertyId) => setCertModal({ clientId, propertyId })}
+          invoices={invoices}
+          onGoToInvoices={() => { setView('jobs'); setWorkTab('invoices') }}
         />
       )}
 
@@ -429,6 +492,18 @@ export default function App() {
               onFilterChange={setQuoteFilter}
               onQuoteClick={q => setSelectedQuote(q)}
               onAddQuote={() => { setEditingQuote(null); setQuoteFormJobId(null); setQuoteFormOpen(true) }}
+              engineerProfile={engineerProfile}
+            />
+          }
+          invoicesSlot={
+            <InvoicesView
+              invoices={invoices}
+              clients={clients}
+              loading={invoicesLoading}
+              filter={invoiceFilter}
+              onFilterChange={setInvoiceFilter}
+              onInvoiceClick={inv => setSelectedInvoice(inv)}
+              onAddInvoice={() => { setEditingInvoice(null); setPrefillInvoice(null); setInvoiceFormOpen(true) }}
               engineerProfile={engineerProfile}
             />
           }
@@ -527,6 +602,7 @@ export default function App() {
           onUploadPhoto={uploadJobPhoto}
           onDeletePhoto={deleteJobPhoto}
           onCreateQuote={() => handleCreateQuoteFromJob(selectedJob)}
+          onCreateInvoice={() => handleCreateInvoiceFromJob(selectedJob)}
         />
       )}
 
@@ -554,6 +630,34 @@ export default function App() {
           onDelete={handleDeleteQuote}
           onDuplicate={() => handleDuplicateQuote(selectedQuote)}
           onStatusChange={updateQuoteStatus}
+          onConvertToInvoice={() => handleConvertQuoteToInvoice(selectedQuote)}
+        />
+      )}
+
+      {/* Invoice form modal */}
+      {invoiceFormOpen && (
+        <InvoiceForm
+          clients={clients}
+          engineerProfile={engineerProfile}
+          invoice={editingInvoice || prefillInvoice || null}
+          saving={saving}
+          onSubmit={editingInvoice ? data => handleUpdateInvoice(editingInvoice.id, data) : handleAddInvoice}
+          onClose={() => { setInvoiceFormOpen(false); setEditingInvoice(null); setPrefillInvoice(null) }}
+        />
+      )}
+
+      {/* Invoice detail modal */}
+      {selectedInvoice && (
+        <InvoiceDetail
+          invoice={invoices.find(i => i.id === selectedInvoice.id) || selectedInvoice}
+          clients={clients}
+          engineerProfile={engineerProfile}
+          onClose={() => setSelectedInvoice(null)}
+          onEdit={() => { setEditingInvoice(selectedInvoice); setSelectedInvoice(null); setInvoiceFormOpen(true) }}
+          onDelete={handleDeleteInvoice}
+          onDuplicate={() => handleDuplicateInvoice(selectedInvoice)}
+          onStatusChange={updateInvoiceStatus}
+          onSavePaymentLink={savePaymentLink}
         />
       )}
 

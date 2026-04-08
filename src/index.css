@@ -1754,3 +1754,65 @@ html, body, #root {
 .onboarding-form {
   margin-bottom: 4px;
 }
+
+/* ── Phase 4: Invoicing ──────────────────────────── */
+
+.outstanding-banner {
+  margin: 0 16px 12px;
+  padding: 14px 16px;
+  background: rgba(10, 132, 255, 0.1);
+  border: 1px solid rgba(10, 132, 255, 0.25);
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.outstanding-banner-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--blue);
+  margin-bottom: 2px;
+}
+
+.outstanding-banner-sub {
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.outstanding-banner-amount {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+.invoice-dashboard-banner {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  background: rgba(10, 132, 255, 0.1);
+  border: 1px solid rgba(10, 132, 255, 0.25);
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.invoice-dashboard-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--blue);
+  margin-bottom: 2px;
+}
+
+.invoice-dashboard-sub {
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.invoice-dashboard-amount {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--blue);
+}

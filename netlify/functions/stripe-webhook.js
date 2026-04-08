@@ -31,13 +31,22 @@ export const handler = async (event) => {
   try {
     switch (stripeEvent.type) {
       case 'checkout.session.completed': {
-        const userId = obj.metadata?.user_id
-        if (userId) {
-          await supabase.from('profiles').update({
-            subscription_status: 'active',
-            stripe_customer_id: obj.customer,
-            stripe_subscription_id: obj.subscription,
-          }).eq('id', userId)
+        if (obj.mode === 'subscription') {
+          // Subscription purchase
+          const userId = obj.metadata?.user_id
+          if (userId) {
+            await supabase.from('profiles').update({
+              subscription_status: 'active',
+              stripe_customer_id: obj.customer,
+              stripe_subscription_id: obj.subscription,
+            }).eq('id', userId)
+          }
+        } else if (obj.mode === 'payment' && obj.metadata?.invoice_id) {
+          // One-time invoice payment
+          await supabase.from('invoices').update({
+            status: 'paid',
+            paid_at: new Date().toISOString(),
+          }).eq('id', obj.metadata.invoice_id)
         }
         break
       }

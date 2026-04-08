@@ -7,7 +7,7 @@ function fmtDate(d) {
   return new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-export default function QuoteDetail({ quote, clients, engineerProfile, onClose, onEdit, onDelete, onDuplicate, onStatusChange }) {
+export default function QuoteDetail({ quote, clients, engineerProfile, onClose, onEdit, onDelete, onDuplicate, onStatusChange, onConvertToInvoice }) {
   const [emailing, setEmailing] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [emailError, setEmailError] = useState('')
@@ -143,6 +143,9 @@ export default function QuoteDetail({ quote, clients, engineerProfile, onClose, 
         {/* Footer actions */}
         <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
           <button className="btn btn-ghost btn-sm" onClick={onDuplicate}>Duplicate</button>
+          {quote.status === 'accepted' && (
+            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--blue)' }} onClick={onConvertToInvoice}>→ Invoice</button>
+          )}
           <div style={{ flex: 1 }} />
           {deleteConfirm ? (
             <>

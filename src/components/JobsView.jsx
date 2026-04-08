@@ -20,7 +20,7 @@ const FILTERS = [
   { value: 'archived',    label: 'Archived' },
 ]
 
-export default function JobsView({ jobs, clients, loading, onJobClick, onAddJob, workTab, onWorkTabChange, quotesSlot }) {
+export default function JobsView({ jobs, clients, loading, onJobClick, onAddJob, workTab, onWorkTabChange, quotesSlot, invoicesSlot }) {
   const [filter, setFilter] = useState('active')
   const [clientFilter, setClientFilter] = useState('')
 
@@ -41,26 +41,25 @@ export default function JobsView({ jobs, clients, loading, onJobClick, onAddJob,
     )
   }
 
-  // If showing quotes tab, render the quotes slot
+  const segmentBar = (
+    <div className="work-segment-bar">
+      <button className={`work-segment${workTab === 'jobs' ? ' active' : ''}`} onClick={() => onWorkTabChange('jobs')}>Jobs</button>
+      <button className={`work-segment${workTab === 'quotes' ? ' active' : ''}`} onClick={() => onWorkTabChange('quotes')}>Quotes</button>
+      <button className={`work-segment${workTab === 'invoices' ? ' active' : ''}`} onClick={() => onWorkTabChange('invoices')}>Invoices</button>
+    </div>
+  )
+
   if (workTab === 'quotes') {
-    return (
-      <div className="page">
-        <div className="work-segment-bar">
-          <button className={`work-segment${workTab === 'jobs' ? ' active' : ''}`} onClick={() => onWorkTabChange('jobs')}>Jobs</button>
-          <button className={`work-segment${workTab === 'quotes' ? ' active' : ''}`} onClick={() => onWorkTabChange('quotes')}>Quotes</button>
-        </div>
-        {quotesSlot}
-      </div>
-    )
+    return <div className="page">{segmentBar}{quotesSlot}</div>
+  }
+
+  if (workTab === 'invoices') {
+    return <div className="page">{segmentBar}{invoicesSlot}</div>
   }
 
   return (
     <div className="page">
-      {/* Work segment tabs */}
-      <div className="work-segment-bar">
-        <button className={`work-segment${workTab === 'jobs' ? ' active' : ''}`} onClick={() => onWorkTabChange('jobs')}>Jobs</button>
-        <button className={`work-segment${workTab === 'quotes' ? ' active' : ''}`} onClick={() => onWorkTabChange('quotes')}>Quotes</button>
-      </div>
+      {segmentBar}
       {/* Filter bar */}
       <div className="filter-bar">
         {FILTERS.map(f => (
