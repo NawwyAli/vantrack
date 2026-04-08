@@ -1,4 +1,6 @@
 import { getCertStatus, getDaysLabel, fmtDate, getExpiryDate } from '../utils.js'
+import ClientNotes from './ClientNotes.jsx'
+import { JOB_STATUSES } from '../hooks/useJobs.js'
 
 const EditIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -20,6 +22,8 @@ export default function ClientDetail({
   client, onBack, onEdit, onDelete,
   onAddProperty, onEditProperty, onDeleteProperty,
   onRenew, onAddCert, onEditCert, onDeleteCert,
+  jobs, onJobClick, onAddJob,
+  fetchNotes, addNote, deleteNote,
 }) {
   if (!client) return null
 
@@ -156,6 +160,53 @@ export default function ClientDetail({
             </div>
           )
         })}
+
+        {/* Job history for this client */}
+        {jobs && (
+          <>
+            <div className="section-row">
+              <div className="section-title">Jobs</div>
+              <button className="btn btn-ghost btn-sm" onClick={onAddJob}>+ Add Job</button>
+            </div>
+            {jobs.length === 0 ? (
+              <div className="empty-state" style={{ padding: '24px' }}>
+                <div className="empty-text">No jobs logged for this client yet.</div>
+              </div>
+            ) : (
+              jobs.map(job => {
+                const statusInfo = JOB_STATUSES.find(s => s.value === job.status)
+                return (
+                  <div key={job.id} className="job-card" onClick={() => onJobClick(job)}
+                    style={{ margin: '0 0 8px' }}>
+                    <div className="job-card-header">
+                      <div className="job-card-status-bar" style={{ background: statusInfo?.color }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="job-card-description">{job.description}</div>
+                        <div className="job-card-date">{new Date(job.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                      </div>
+                      {job.price != null && (
+                        <div className="job-card-price">£{parseFloat(job.price).toFixed(2)}</div>
+                      )}
+                    </div>
+                    <span className="job-status-badge" style={{ background: statusInfo?.color + '22', color: statusInfo?.color, marginTop: '6px', display: 'inline-block' }}>
+                      {statusInfo?.label}
+                    </span>
+                  </div>
+                )
+              })
+            )}
+          </>
+        )}
+
+        {/* Communication log */}
+        {fetchNotes && (
+          <ClientNotes
+            clientId={client.id}
+            fetchNotes={fetchNotes}
+            addNote={addNote}
+            deleteNote={deleteNote}
+          />
+        )}
 
         <div className="danger-zone">
           <div className="danger-zone-title">Danger Zone</div>

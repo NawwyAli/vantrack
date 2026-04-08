@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from './hooks/useAuth.js'
 import { useData } from './hooks/useData.js'
+import { useJobs } from './hooks/useJobs.js'
 
 import AuthScreen from './components/AuthScreen.jsx'
 import TrialWall from './components/TrialWall.jsx'
@@ -15,6 +16,9 @@ import ClientForm from './components/ClientForm.jsx'
 import CertModal from './components/CertModal.jsx'
 import AddPropertyModal from './components/AddPropertyModal.jsx'
 import ProfileView from './components/ProfileView.jsx'
+import JobsView from './components/JobsView.jsx'
+import JobForm from './components/JobForm.jsx'
+import JobDetail from './components/JobDetail.jsx'
 
 export default function App() {
   const { user, profile, loading: authLoading, signIn, signUp, signOut, resetPassword, refreshProfile, updateRole } = useAuth()
@@ -24,6 +28,12 @@ export default function App() {
     addProperty, updateProperty, deleteProperty,
     saveCertificate, updateCertificate, deleteCertificate,
   } = useData(user)
+  const {
+    jobs, loading: jobsLoading,
+    addJob, updateJob, updateJobStatus, archiveJob, deleteJob, duplicateJob,
+    uploadJobPhoto, deleteJobPhoto,
+    addNote, deleteNote, fetchNotes,
+  } = useJobs(user)
 
   const [view, setView] = useState('dashboard')
   const [selectedClientId, setSelectedClientId] = useState(null)
@@ -37,6 +47,10 @@ export default function App() {
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [saving, setSaving] = useState(false)
   const [subscribing, setSubscribing] = useState(false)
+  const [jobFormOpen, setJobFormOpen] = useState(false)
+  const [editingJob, setEditingJob] = useState(null)
+  const [selectedJob, setSelectedJob] = useState(null)
+  const [jobFormClientId, setJobFormClientId] = useState(null)
 
   async function handleSubscribe() {
     setSubscribing(true)
@@ -201,6 +215,48 @@ export default function App() {
     finally { setSaving(false) }
   }
 
+  // --- Job handlers ---
+
+  async function handleAddJob(data) {
+    setSaving(true)
+    try { await addJob(data); setJobFormOpen(false); setJobFormClientId(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  async function handleUpdateJob(id, data) {
+    setSaving(true)
+    try { await updateJob(id, data); setJobFormOpen(false); setEditingJob(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  async function handleDeleteJob(id) {
+    setSaving(true)
+    try { await deleteJob(id); setSelectedJob(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  async function handleDuplicateJob(job) {
+    setSaving(true)
+    try { await duplicateJob(job); setSelectedJob(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  function handleOpenJobForm(clientId = null) {
+    setEditingJob(null)
+    setJobFormClientId(clientId)
+    setJobFormOpen(true)
+  }
+
+  function handleEditJob(job) {
+    setEditingJob(job)
+    setSelectedJob(null)
+    setJobFormOpen(true)
+  }
+
   // --- Navigation ---
 
   function handleClientClick(clientId) { setSelectedClientId(clientId); setView('client-detail') }
@@ -295,6 +351,22 @@ export default function App() {
           onAddCert={propertyId => setCertModal({ clientId: selectedClientId, propertyId })}
           onEditCert={propertyId => setCertModal({ clientId: selectedClientId, propertyId, editMode: true })}
           onDeleteCert={handleDeleteCertPrompt}
+          jobs={jobs.filter(j => j.clientId === selectedClientId && !j.archived)}
+          onJobClick={job => setSelectedJob(job)}
+          onAddJob={() => handleOpenJobForm(selectedClientId)}
+          fetchNotes={fetchNotes}
+          addNote={addNote}
+          deleteNote={deleteNote}
+        />
+      )}
+
+      {view === 'jobs' && (
+        <JobsView
+          jobs={jobs}
+          clients={clients}
+          loading={jobsLoading}
+          onJobClick={job => setSelectedJob(job)}
+          onAddJob={() => handleOpenJobForm()}
         />
       )}
 
@@ -360,6 +432,33 @@ export default function App() {
             }
           }}
           onClose={() => setAddPropertyModal(null)}
+        />
+      )}
+
+      {/* Job form modal */}
+      {jobFormOpen && (
+        <JobForm
+          clients={clients}
+          job={editingJob ? { ...editingJob, clientId: editingJob.clientId } : (jobFormClientId ? { clientId: jobFormClientId } : null)}
+          saving={saving}
+          onSubmit={editingJob ? data => handleUpdateJob(editingJob.id, data) : handleAddJob}
+          onClose={() => { setJobFormOpen(false); setEditingJob(null); setJobFormClientId(null) }}
+        />
+      )}
+
+      {/* Job detail modal */}
+      {selectedJob && (
+        <JobDetail
+          job={jobs.find(j => j.id === selectedJob.id) || selectedJob}
+          clients={clients}
+          onClose={() => setSelectedJob(null)}
+          onEdit={() => handleEditJob(selectedJob)}
+          onDelete={handleDeleteJob}
+          onArchive={archiveJob}
+          onDuplicate={() => handleDuplicateJob(selectedJob)}
+          onStatusChange={updateJobStatus}
+          onUploadPhoto={uploadJobPhoto}
+          onDeletePhoto={deleteJobPhoto}
         />
       )}
 
