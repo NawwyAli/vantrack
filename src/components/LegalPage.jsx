@@ -110,7 +110,7 @@ function TermsAndConditions() {
 
       <Section title="Subscription">
         <ul>
-          <li>The subscription fee is <strong>£25 per month</strong>, billed monthly.</li>
+          <li>The subscription fee is <strong>£29.99 per month</strong>, billed monthly.</li>
           <li>Payment is processed securely by Stripe.</li>
           <li>Your subscription renews automatically each month unless cancelled.</li>
           <li>You may cancel at any time. Access continues until the end of the current billing period. No partial refunds are issued.</li>

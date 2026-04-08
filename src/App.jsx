@@ -35,6 +35,24 @@ export default function App() {
   // deleteConfirm: { type: 'client'|'property'|'certificate', clientId, propertyId? }
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [subscribing, setSubscribing] = useState(false)
+
+  async function handleSubscribe() {
+    setSubscribing(true)
+    try {
+      const res = await fetch('/.netlify/functions/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id, email: user.email }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to create checkout session')
+      window.location.href = data.url
+    } catch (err) {
+      alert(err.message)
+      setSubscribing(false)
+    }
+  }
   const [legalPage, setLegalPage] = useState(null) // 'privacy' | 'terms'
   const [showOnboarding, setShowOnboarding] = useState(
     () => user ? !localStorage.getItem(`vantrack_onboarded_${user.id}`) : false
@@ -236,7 +254,7 @@ export default function App() {
       {showTrialBanner && (
         <div className="trial-banner">
           ⏰ {daysLeft === 1 ? 'Last day' : `${daysLeft} days`} left in your free trial
-          <span className="trial-banner-cta" onClick={() => alert('Stripe integration coming soon')}>Subscribe →</span>
+          <span className="trial-banner-cta" onClick={handleSubscribe}>{subscribing ? 'Redirecting…' : 'Subscribe →'}</span>
         </div>
       )}
       <Header

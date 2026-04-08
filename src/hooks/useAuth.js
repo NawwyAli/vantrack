@@ -49,7 +49,10 @@ export function useAuth() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { role } },
+      options: {
+        data: { role },
+        emailRedirectTo: 'https://storied-sunburst-d7d0ae.netlify.app',
+      },
     })
     if (error) throw error
     // Profile is created automatically via the handle_new_user trigger in Supabase

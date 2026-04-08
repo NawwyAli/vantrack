@@ -24,17 +24,21 @@ export default function Header({ view, selectedClient, profile, onBack, onEdit, 
     window.location.href = 'mailto:vantrack@outlook.com?subject=VanTrack%20Support'
   }
 
+  const supportBtn = (
+    <button className="icon-btn" onClick={handleSupport} aria-label="Contact support" title="Contact support">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+        <circle cx="12" cy="17" r=".5" fill="currentColor"/>
+      </svg>
+    </button>
+  )
+
   const renderRight = () => {
     if (view === 'dashboard') {
       return (
         <div style={{ display: 'flex', gap: '4px' }}>
-          <button className="icon-btn" onClick={handleSupport} aria-label="Contact support" title="Contact support">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
-              <circle cx="12" cy="17" r=".5" fill="currentColor"/>
-            </svg>
-          </button>
+          {supportBtn}
           <button className="icon-btn" onClick={onSignOut} aria-label="Sign out" title="Sign out">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path d="M7 3H4a1 1 0 00-1 1v12a1 1 0 001 1h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -47,20 +51,26 @@ export default function Header({ view, selectedClient, profile, onBack, onEdit, 
     }
     if (view === 'clients') {
       return (
-        <button className="icon-btn" onClick={onAddClient} aria-label="Add client">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M10 4V16M4 10H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </button>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {supportBtn}
+          <button className="icon-btn" onClick={onAddClient} aria-label="Add client">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M10 4V16M4 10H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
       )
     }
     if (view === 'client-detail') {
       return (
-        <button className="icon-btn" onClick={onEdit} aria-label="Edit client">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M14.5 2.5L17.5 5.5L7 16H4V13L14.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {supportBtn}
+          <button className="icon-btn" onClick={onEdit} aria-label="Edit client">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M14.5 2.5L17.5 5.5L7 16H4V13L14.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
       )
     }
     return null

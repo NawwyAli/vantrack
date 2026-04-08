@@ -34,7 +34,7 @@ export default function TrialWall({ user, onSignOut }) {
         <div style={{ fontSize: '40px', marginBottom: '12px' }}>⏰</div>
         <div className="modal-title" style={{ marginBottom: '8px' }}>Your Free Trial Has Ended</div>
         <p style={{ color: 'var(--text2)', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
-          Your 14-day free trial is up. Subscribe for <strong style={{ color: 'var(--text)' }}>£25/month</strong> to
+          Your 14-day free trial is up. Subscribe for <strong style={{ color: 'var(--text)' }}>£29.99/month</strong> to
           keep full access to VanTrack — unlimited clients, properties, and CP12 tracking.
         </p>
 
@@ -53,7 +53,7 @@ export default function TrialWall({ user, onSignOut }) {
         {error && <div className="auth-error">{error}</div>}
 
         <button className="btn btn-primary auth-submit" onClick={handleSubscribe} disabled={loading}>
-          {loading ? 'Redirecting to checkout…' : 'Subscribe — £25/month'}
+          {loading ? 'Redirecting to checkout…' : 'Subscribe — £29.99/month'}
         </button>
 
         <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', marginTop: '10px' }}
