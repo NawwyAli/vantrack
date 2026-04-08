@@ -11,7 +11,7 @@ function fmtPrice(p) {
   return '£' + parseFloat(p).toFixed(2)
 }
 
-export default function JobDetail({ job, clients, onClose, onEdit, onDelete, onArchive, onDuplicate, onStatusChange, onUploadPhoto, onDeletePhoto }) {
+export default function JobDetail({ job, clients, onClose, onEdit, onDelete, onArchive, onDuplicate, onStatusChange, onUploadPhoto, onDeletePhoto, onCreateQuote }) {
   const [photoUploading, setPhotoUploading] = useState(false)
   const [photoError, setPhotoError] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState(false)
@@ -49,7 +49,8 @@ export default function JobDetail({ job, clients, onClose, onEdit, onDelete, onA
             </span>
           </div>
           <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-            <button className="btn btn-ghost btn-sm" onClick={onEdit}>Edit</button>
+            <button className="btn btn-ghost btn-sm" onClick={onCreateQuote}>Quote</button>
+          <button className="btn btn-ghost btn-sm" onClick={onEdit}>Edit</button>
           </div>
         </div>
 

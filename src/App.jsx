@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth } from './hooks/useAuth.js'
 import { useData } from './hooks/useData.js'
 import { useJobs } from './hooks/useJobs.js'
+import { useQuotes } from './hooks/useQuotes.js'
+import { useEngineerProfile } from './hooks/useEngineerProfile.js'
 
 import AuthScreen from './components/AuthScreen.jsx'
 import TrialWall from './components/TrialWall.jsx'
@@ -19,6 +21,9 @@ import ProfileView from './components/ProfileView.jsx'
 import JobsView from './components/JobsView.jsx'
 import JobForm from './components/JobForm.jsx'
 import JobDetail from './components/JobDetail.jsx'
+import QuotesView from './components/QuotesView.jsx'
+import QuoteForm from './components/QuoteForm.jsx'
+import QuoteDetail from './components/QuoteDetail.jsx'
 
 export default function App() {
   const { user, profile, loading: authLoading, signIn, signUp, signOut, resetPassword, refreshProfile, updateRole } = useAuth()
@@ -34,6 +39,8 @@ export default function App() {
     uploadJobPhoto, deleteJobPhoto,
     addNote, deleteNote, fetchNotes,
   } = useJobs(user)
+  const { quotes, loading: quotesLoading, addQuote, updateQuote, updateQuoteStatus, deleteQuote, duplicateQuote } = useQuotes(user)
+  const { engineerProfile, saveEngineerProfile } = useEngineerProfile(user)
 
   const [view, setView] = useState('dashboard')
   const [selectedClientId, setSelectedClientId] = useState(null)
@@ -51,6 +58,12 @@ export default function App() {
   const [editingJob, setEditingJob] = useState(null)
   const [selectedJob, setSelectedJob] = useState(null)
   const [jobFormClientId, setJobFormClientId] = useState(null)
+  const [workTab, setWorkTab] = useState('jobs') // 'jobs' | 'quotes'
+  const [quoteFormOpen, setQuoteFormOpen] = useState(false)
+  const [editingQuote, setEditingQuote] = useState(null)
+  const [selectedQuote, setSelectedQuote] = useState(null)
+  const [quoteFilter, setQuoteFilter] = useState('all')
+  const [quoteFormJobId, setQuoteFormJobId] = useState(null)
 
   async function handleSubscribe() {
     setSubscribing(true)
@@ -257,6 +270,44 @@ export default function App() {
     setJobFormOpen(true)
   }
 
+  // --- Quote handlers ---
+
+  async function handleAddQuote(data) {
+    setSaving(true)
+    try { await addQuote(data); setQuoteFormOpen(false); setQuoteFormJobId(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  async function handleUpdateQuote(id, data) {
+    setSaving(true)
+    try { await updateQuote(id, data); setQuoteFormOpen(false); setEditingQuote(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  async function handleDeleteQuote(id) {
+    setSaving(true)
+    try { await deleteQuote(id); setSelectedQuote(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  async function handleDuplicateQuote(quote) {
+    setSaving(true)
+    try { await duplicateQuote(quote); setSelectedQuote(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  function handleCreateQuoteFromJob(job) {
+    setSelectedJob(null)
+    setEditingQuote(null)
+    setQuoteFormJobId(job.id)
+    setWorkTab('quotes')
+    setQuoteFormOpen(true)
+  }
+
   // --- Navigation ---
 
   function handleClientClick(clientId) { setSelectedClientId(clientId); setView('client-detail') }
@@ -367,6 +418,20 @@ export default function App() {
           loading={jobsLoading}
           onJobClick={job => setSelectedJob(job)}
           onAddJob={() => handleOpenJobForm()}
+          workTab={workTab}
+          onWorkTabChange={setWorkTab}
+          quotesSlot={
+            <QuotesView
+              quotes={quotes}
+              clients={clients}
+              loading={quotesLoading}
+              filter={quoteFilter}
+              onFilterChange={setQuoteFilter}
+              onQuoteClick={q => setSelectedQuote(q)}
+              onAddQuote={() => { setEditingQuote(null); setQuoteFormJobId(null); setQuoteFormOpen(true) }}
+              engineerProfile={engineerProfile}
+            />
+          }
         />
       )}
 
@@ -374,9 +439,11 @@ export default function App() {
         <ProfileView
           user={user}
           profile={profile}
+          engineerProfile={engineerProfile}
           onSignOut={signOut}
           onResetPassword={resetPassword}
           onUpdateRole={updateRole}
+          onSaveEngineerProfile={saveEngineerProfile}
         />
       )}
 
@@ -459,6 +526,34 @@ export default function App() {
           onStatusChange={updateJobStatus}
           onUploadPhoto={uploadJobPhoto}
           onDeletePhoto={deleteJobPhoto}
+          onCreateQuote={() => handleCreateQuoteFromJob(selectedJob)}
+        />
+      )}
+
+      {/* Quote form modal */}
+      {quoteFormOpen && (
+        <QuoteForm
+          clients={clients}
+          jobs={jobs}
+          engineerProfile={engineerProfile}
+          quote={editingQuote ? editingQuote : (quoteFormJobId ? { jobId: quoteFormJobId, clientId: jobs.find(j => j.id === quoteFormJobId)?.clientId || '' } : null)}
+          saving={saving}
+          onSubmit={editingQuote ? data => handleUpdateQuote(editingQuote.id, data) : handleAddQuote}
+          onClose={() => { setQuoteFormOpen(false); setEditingQuote(null); setQuoteFormJobId(null) }}
+        />
+      )}
+
+      {/* Quote detail modal */}
+      {selectedQuote && (
+        <QuoteDetail
+          quote={quotes.find(q => q.id === selectedQuote.id) || selectedQuote}
+          clients={clients}
+          engineerProfile={engineerProfile}
+          onClose={() => setSelectedQuote(null)}
+          onEdit={() => { setEditingQuote(selectedQuote); setSelectedQuote(null); setQuoteFormOpen(true) }}
+          onDelete={handleDeleteQuote}
+          onDuplicate={() => handleDuplicateQuote(selectedQuote)}
+          onStatusChange={updateQuoteStatus}
         />
       )}
 
