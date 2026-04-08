@@ -1816,3 +1816,184 @@ html, body, #root {
   font-weight: 700;
   color: var(--blue);
 }
+
+/* ── Phase 6: Calendar ──────────────────────────── */
+
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px 8px;
+}
+
+.cal-month-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cal-nav-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: var(--surface2);
+  border-radius: 50%;
+  color: var(--text2);
+  cursor: pointer;
+}
+
+.cal-nav-btn:hover {
+  background: var(--border);
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  padding: 0 10px;
+}
+
+.cal-day-header {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  padding: 6px 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cal-cell {
+  min-height: 52px;
+  padding: 6px 4px 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: background 0.12s;
+}
+
+.cal-cell:hover {
+  background: var(--surface2);
+}
+
+.cal-cell-empty {
+  cursor: default;
+  pointer-events: none;
+}
+
+.cal-cell-empty:hover {
+  background: transparent;
+}
+
+.cal-today .cal-day-num {
+  background: var(--blue);
+  color: #fff;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cal-selected {
+  background: rgba(10, 132, 255, 0.1);
+  outline: 1.5px solid var(--blue);
+}
+
+.cal-selected:hover {
+  background: rgba(10, 132, 255, 0.15);
+}
+
+.cal-day-num {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cal-dots {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.cal-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cal-dot-more {
+  font-size: 9px;
+  color: var(--text3);
+  font-weight: 600;
+}
+
+.cal-day-panel {
+  margin: 12px 16px 0;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.cal-day-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.cal-job-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.cal-job-card:hover {
+  background: var(--border);
+}
+
+.cal-job-status-bar {
+  width: 3px;
+  height: 32px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* List/calendar toggle buttons */
+.cal-toggle-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.cal-toggle-btn.active {
+  background: rgba(10, 132, 255, 0.1);
+  border-color: var(--blue);
+}

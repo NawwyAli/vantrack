@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { JOB_STATUSES } from '../hooks/useJobs.js'
+import CalendarView from './CalendarView.jsx'
 
 function fmtDate(d) {
   if (!d) return ''
@@ -20,9 +21,29 @@ const FILTERS = [
   { value: 'archived',    label: 'Archived' },
 ]
 
+function CalIcon({ active }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none"
+      style={{ color: active ? 'var(--blue)' : 'var(--text3)' }}>
+      <rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M3 8h14M7 2v3M13 2v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+function ListIcon({ active }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none"
+      style={{ color: active ? 'var(--blue)' : 'var(--text3)' }}>
+      <path d="M4 6h12M4 10h12M4 14h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
 export default function JobsView({ jobs, clients, loading, onJobClick, onAddJob, workTab, onWorkTabChange, quotesSlot, invoicesSlot }) {
   const [filter, setFilter] = useState('active')
   const [clientFilter, setClientFilter] = useState('')
+  const [calendarMode, setCalendarMode] = useState(false)
 
   const filtered = jobs.filter(j => {
     if (clientFilter && j.clientId !== clientFilter) return false
@@ -60,47 +81,70 @@ export default function JobsView({ jobs, clients, loading, onJobClick, onAddJob,
   return (
     <div className="page">
       {segmentBar}
-      {/* Filter bar */}
-      <div className="filter-bar">
-        {FILTERS.map(f => (
-          <button key={f.value}
-            className={`filter-chip${filter === f.value ? ' active' : ''}`}
-            onClick={() => setFilter(f.value)}>
-            {f.label}
+
+      {/* Toolbar: filters + view toggle */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 16px 4px' }}>
+        <div style={{ flex: 1, overflowX: 'auto' }}>
+          <div className="filter-bar" style={{ padding: 0 }}>
+            {FILTERS.map(f => (
+              <button key={f.value}
+                className={`filter-chip${filter === f.value ? ' active' : ''}`}
+                onClick={() => { setFilter(f.value); setCalendarMode(false) }}>
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+          <button className={`cal-toggle-btn${!calendarMode ? ' active' : ''}`} onClick={() => setCalendarMode(false)} aria-label="List view">
+            <ListIcon active={!calendarMode} />
           </button>
-        ))}
+          <button className={`cal-toggle-btn${calendarMode ? ' active' : ''}`} onClick={() => setCalendarMode(true)} aria-label="Calendar view">
+            <CalIcon active={calendarMode} />
+          </button>
+        </div>
       </div>
 
-      {/* Client filter */}
-      {clients.length > 0 && (
-        <div style={{ padding: '0 16px 8px' }}>
-          <select className="form-input" style={{ fontSize: '13px', height: '36px' }}
-            value={clientFilter} onChange={e => setClientFilter(e.target.value)}>
-            <option value="">All clients</option>
-            {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </div>
-      )}
-
-      {/* Jobs list */}
-      <div className="page-content">
-        {filtered.length === 0 ? (
-          <div className="empty-state" style={{ paddingTop: '60px' }}>
-            <div className="empty-icon">🔧</div>
-            <div className="empty-title">No jobs here</div>
-            <div className="empty-text">
-              {filter === 'active' ? 'Add your first job to get started.' : `No ${filter} jobs.`}
+      {calendarMode ? (
+        <CalendarView
+          jobs={jobs}
+          clients={clients}
+          onJobClick={onJobClick}
+          onAddJob={onAddJob}
+        />
+      ) : (
+        <>
+          {/* Client filter */}
+          {clients.length > 0 && (
+            <div style={{ padding: '0 16px 8px' }}>
+              <select className="form-input" style={{ fontSize: '13px', height: '36px' }}
+                value={clientFilter} onChange={e => setClientFilter(e.target.value)}>
+                <option value="">All clients</option>
+                {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
             </div>
-            {filter === 'active' && (
-              <button className="btn btn-primary" style={{ marginTop: '16px' }} onClick={onAddJob}>Add Job</button>
+          )}
+
+          <div className="page-content">
+            {filtered.length === 0 ? (
+              <div className="empty-state" style={{ paddingTop: '60px' }}>
+                <div className="empty-icon">🔧</div>
+                <div className="empty-title">No jobs here</div>
+                <div className="empty-text">
+                  {filter === 'active' ? 'Add your first job to get started.' : `No ${filter} jobs.`}
+                </div>
+                {filter === 'active' && (
+                  <button className="btn btn-primary" style={{ marginTop: '16px' }} onClick={() => onAddJob(null)}>Add Job</button>
+                )}
+              </div>
+            ) : (
+              filtered.map(job => <JobCard key={job.id} job={job} clients={clients} onClick={() => onJobClick(job)} />)
             )}
           </div>
-        ) : (
-          filtered.map(job => <JobCard key={job.id} job={job} clients={clients} onClick={() => onJobClick(job)} />)
-        )}
-      </div>
 
-      <button className="fab" onClick={onAddJob} aria-label="Add job">+</button>
+          <button className="fab" onClick={() => onAddJob(null)} aria-label="Add job">+</button>
+        </>
+      )}
     </div>
   )
 }
@@ -124,7 +168,10 @@ function JobCard({ job, clients, onClick }) {
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
           {price && <div className="job-card-price">{price}</div>}
-          <div className="job-card-date">{fmtDate(job.date)}</div>
+          <div className="job-card-date">
+            {fmtDate(job.date)}
+            {job.startTime && <span style={{ color: 'var(--text3)', marginLeft: '4px' }}>{job.startTime}</span>}
+          </div>
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>

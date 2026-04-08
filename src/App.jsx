@@ -69,6 +69,7 @@ export default function App() {
   const [editingJob, setEditingJob] = useState(null)
   const [selectedJob, setSelectedJob] = useState(null)
   const [jobFormClientId, setJobFormClientId] = useState(null)
+  const [jobFormDate, setJobFormDate] = useState(null)
   const [workTab, setWorkTab] = useState('jobs') // 'jobs' | 'quotes'
   const [quoteFormOpen, setQuoteFormOpen] = useState(false)
   const [editingQuote, setEditingQuote] = useState(null)
@@ -274,9 +275,10 @@ export default function App() {
     finally { setSaving(false) }
   }
 
-  function handleOpenJobForm(clientId = null) {
+  function handleOpenJobForm(clientId = null, date = null) {
     setEditingJob(null)
     setJobFormClientId(clientId)
+    setJobFormDate(date)
     setJobFormOpen(true)
   }
 
@@ -468,7 +470,7 @@ export default function App() {
           onDeleteCert={handleDeleteCertPrompt}
           jobs={jobs.filter(j => j.clientId === selectedClientId && !j.archived)}
           onJobClick={job => setSelectedJob(job)}
-          onAddJob={() => handleOpenJobForm(selectedClientId)}
+          onAddJob={() => handleOpenJobForm(selectedClientId, null)}
           fetchNotes={fetchNotes}
           addNote={addNote}
           deleteNote={deleteNote}
@@ -481,7 +483,7 @@ export default function App() {
           clients={clients}
           loading={jobsLoading}
           onJobClick={job => setSelectedJob(job)}
-          onAddJob={() => handleOpenJobForm()}
+          onAddJob={date => handleOpenJobForm(null, date || null)}
           workTab={workTab}
           onWorkTabChange={setWorkTab}
           quotesSlot={
@@ -584,10 +586,14 @@ export default function App() {
       {jobFormOpen && (
         <JobForm
           clients={clients}
-          job={editingJob ? { ...editingJob, clientId: editingJob.clientId } : (jobFormClientId ? { clientId: jobFormClientId } : null)}
+          job={editingJob
+            ? editingJob
+            : (jobFormClientId || jobFormDate)
+              ? { clientId: jobFormClientId || '', date: jobFormDate || undefined }
+              : null}
           saving={saving}
           onSubmit={editingJob ? data => handleUpdateJob(editingJob.id, data) : handleAddJob}
-          onClose={() => { setJobFormOpen(false); setEditingJob(null); setJobFormClientId(null) }}
+          onClose={() => { setJobFormOpen(false); setEditingJob(null); setJobFormClientId(null); setJobFormDate(null) }}
         />
       )}
 

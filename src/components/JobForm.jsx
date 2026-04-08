@@ -4,13 +4,15 @@ import { JOB_STATUSES, RECURRING_INTERVALS } from '../hooks/useJobs.js'
 const today = new Date().toISOString().split('T')[0]
 
 export default function JobForm({ clients, job, saving, onSubmit, onClose }) {
-  // job may be a full job (edit) or a partial { clientId } (pre-fill from client detail)
+  // job may be a full job (edit) or a partial { clientId, date } (pre-fill)
   const isEdit = !!(job?.description)
 
   const [clientId, setClientId] = useState(job?.clientId || '')
   const [propertyId, setPropertyId] = useState(job?.propertyId || '')
   const [description, setDescription] = useState(job?.description || '')
   const [date, setDate] = useState(job?.date || today)
+  const [startTime, setStartTime] = useState(job?.startTime || '')
+  const [endTime, setEndTime] = useState(job?.endTime || '')
   const [price, setPrice] = useState(job?.price != null ? String(job.price) : '')
   const [status, setStatus] = useState(job?.status || 'pending')
   const [recurring, setRecurring] = useState(job?.recurring || false)
@@ -36,7 +38,19 @@ export default function JobForm({ clients, job, saving, onSubmit, onClose }) {
   function handleSubmit() {
     const errs = validate()
     if (Object.keys(errs).length) { setErrors(errs); return }
-    onSubmit({ clientId, propertyId: propertyId || null, description: description.trim(), date, price, status, recurring, recurringInterval: recurring ? recurringInterval : null, notes: notes.trim() })
+    onSubmit({
+      clientId,
+      propertyId: propertyId || null,
+      description: description.trim(),
+      date,
+      startTime: startTime || null,
+      endTime: endTime || null,
+      price,
+      status,
+      recurring,
+      recurringInterval: recurring ? recurringInterval : null,
+      notes: notes.trim(),
+    })
   }
 
   return (
@@ -74,6 +88,7 @@ export default function JobForm({ clients, job, saving, onSubmit, onClose }) {
           {errors.description && <div className="form-error">{errors.description}</div>}
         </div>
 
+        {/* Date + Price */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div className="form-group">
             <label className="form-label">Date *</label>
@@ -85,6 +100,20 @@ export default function JobForm({ clients, job, saving, onSubmit, onClose }) {
             <label className="form-label">Price (£)</label>
             <input className="form-input" type="number" min="0" step="0.01"
               placeholder="0.00" value={price} onChange={e => setPrice(e.target.value)} />
+          </div>
+        </div>
+
+        {/* Time slots */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="form-group">
+            <label className="form-label">Start time <span style={{ color: 'var(--text3)' }}>(optional)</span></label>
+            <input className="form-input" type="time" value={startTime}
+              onChange={e => setStartTime(e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">End time <span style={{ color: 'var(--text3)' }}>(optional)</span></label>
+            <input className="form-input" type="time" value={endTime}
+              onChange={e => setEndTime(e.target.value)} />
           </div>
         </div>
 

@@ -9,11 +9,11 @@ export const JOB_STATUSES = [
 ]
 
 export const RECURRING_INTERVALS = [
-  { value: 'weekly',    label: 'Weekly' },
+  { value: 'weekly',      label: 'Weekly' },
   { value: 'fortnightly', label: 'Fortnightly' },
-  { value: 'monthly',   label: 'Monthly' },
-  { value: 'quarterly', label: 'Quarterly' },
-  { value: 'annually',  label: 'Annually' },
+  { value: 'monthly',     label: 'Monthly' },
+  { value: 'quarterly',   label: 'Quarterly' },
+  { value: 'annually',    label: 'Annually' },
 ]
 
 function transformJob(j) {
@@ -23,6 +23,8 @@ function transformJob(j) {
     propertyId: j.property_id,
     description: j.description,
     date: j.date,
+    startTime: j.start_time || null,
+    endTime: j.end_time || null,
     price: j.price,
     status: j.status,
     recurring: j.is_recurring,
@@ -62,6 +64,8 @@ export function useJobs(user) {
       property_id: data.propertyId || null,
       description: data.description,
       date: data.date,
+      start_time: data.startTime || null,
+      end_time: data.endTime || null,
       price: data.price ? parseFloat(data.price) : null,
       status: data.status || 'pending',
       is_recurring: data.recurring || false,
@@ -78,6 +82,8 @@ export function useJobs(user) {
       property_id: data.propertyId || null,
       description: data.description,
       date: data.date,
+      start_time: data.startTime || null,
+      end_time: data.endTime || null,
       price: data.price ? parseFloat(data.price) : null,
       status: data.status,
       is_recurring: data.recurring || false,
@@ -113,6 +119,8 @@ export function useJobs(user) {
       property_id: job.propertyId || null,
       description: job.description,
       date: new Date().toISOString().split('T')[0],
+      start_time: null,
+      end_time: null,
       price: job.price,
       status: 'pending',
       is_recurring: job.recurring,
@@ -142,7 +150,6 @@ export function useJobs(user) {
     await fetchJobs()
   }
 
-  // Client notes
   async function addNote(clientId, note) {
     const { error } = await supabase.from('client_notes').insert({
       user_id: user.id, client_id: clientId, note,
