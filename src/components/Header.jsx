@@ -17,6 +17,7 @@ export default function Header({ view, selectedClient, profile, onBack, onEdit, 
     if (view === 'dashboard') return 'VanTrack 🚐'
     if (view === 'clients') return 'Clients'
     if (view === 'client-detail') return selectedClient?.name || 'Client'
+    if (view === 'profile') return 'Profile'
     return 'VanTrack'
   }
 
@@ -72,6 +73,9 @@ export default function Header({ view, selectedClient, profile, onBack, onEdit, 
           </button>
         </div>
       )
+    }
+    if (view === 'profile') {
+      return supportBtn
     }
     return null
   }

@@ -27,7 +27,7 @@ export default function TrialWall({ user, onSignOut }) {
       <div className="auth-logo">
         <div className="auth-logo-icon">🚐</div>
         <div className="auth-logo-title">VanTrack</div>
-        <div className="auth-logo-sub">CP12 Certificate Tracker</div>
+        <div className="auth-logo-sub">Trade Management for Gas Engineers & Plumbers</div>
       </div>
 
       <div className="auth-card" style={{ textAlign: 'center' }}>

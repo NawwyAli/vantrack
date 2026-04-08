@@ -1039,6 +1039,102 @@ html, body, #root {
   padding-top: calc(var(--header-height) + 33px);
 }
 
+/* Profile / Settings */
+.profile-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 16px 20px;
+  gap: 8px;
+}
+
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-size: 26px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-email {
+  font-size: 14px;
+  color: var(--text2);
+}
+
+.settings-group {
+  margin: 0 16px 16px;
+  background: var(--card);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.settings-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 10px 16px 6px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  font-size: 15px;
+  color: var(--text);
+  border-top: 1px solid var(--border);
+}
+
+.settings-row:first-of-type {
+  border-top: none;
+}
+
+.settings-row-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.settings-row-btn:active {
+  background: var(--surface2);
+}
+
+.settings-row-danger {
+  color: var(--red);
+}
+
+.status-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.status-active {
+  background: rgba(52, 199, 89, 0.15);
+  color: var(--green);
+}
+
+.status-trial {
+  background: rgba(255, 159, 10, 0.15);
+  color: var(--amber);
+}
+
+.status-expired {
+  background: rgba(255, 69, 58, 0.15);
+  color: var(--red);
+}
+
 /* Legal pages */
 .legal-page {
   min-height: 100%;

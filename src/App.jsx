@@ -14,9 +14,10 @@ import ClientDetail from './components/ClientDetail.jsx'
 import ClientForm from './components/ClientForm.jsx'
 import CertModal from './components/CertModal.jsx'
 import AddPropertyModal from './components/AddPropertyModal.jsx'
+import ProfileView from './components/ProfileView.jsx'
 
 export default function App() {
-  const { user, profile, loading: authLoading, signIn, signUp, signOut, resetPassword, refreshProfile } = useAuth()
+  const { user, profile, loading: authLoading, signIn, signUp, signOut, resetPassword, refreshProfile, updateRole } = useAuth()
   const {
     clients, loading: dataLoading,
     addClient, updateClient, deleteClient,
@@ -294,6 +295,16 @@ export default function App() {
           onAddCert={propertyId => setCertModal({ clientId: selectedClientId, propertyId })}
           onEditCert={propertyId => setCertModal({ clientId: selectedClientId, propertyId, editMode: true })}
           onDeleteCert={handleDeleteCertPrompt}
+        />
+      )}
+
+      {view === 'profile' && (
+        <ProfileView
+          user={user}
+          profile={profile}
+          onSignOut={signOut}
+          onResetPassword={resetPassword}
+          onUpdateRole={updateRole}
         />
       )}
 

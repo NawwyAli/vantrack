@@ -65,9 +65,20 @@ export function useAuth() {
     if (error) throw error
   }
 
+  async function updateRole(role) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) throw new Error('Not authenticated')
+    const { error } = await supabase
+      .from('profiles')
+      .update({ role })
+      .eq('id', session.user.id)
+    if (error) throw error
+    setProfile(p => ({ ...p, role }))
+  }
+
   async function signOut() {
     await supabase.auth.signOut()
   }
 
-  return { user, profile, loading, signIn, signUp, signOut, resetPassword, refreshProfile }
+  return { user, profile, loading, signIn, signUp, signOut, resetPassword, refreshProfile, updateRole }
 }

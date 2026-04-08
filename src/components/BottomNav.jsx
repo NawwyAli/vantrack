@@ -1,6 +1,7 @@
 export default function BottomNav({ view, setView }) {
   const isDashboard = view === 'dashboard'
   const isClients = view === 'clients' || view === 'client-detail'
+  const isProfile = view === 'profile'
 
   return (
     <nav className="bottom-nav">
@@ -29,6 +30,17 @@ export default function BottomNav({ view, setView }) {
           <path d="M21 20c0-2.761-1.791-5-4-5"/>
         </svg>
         Clients
+      </button>
+      <button
+        className={`nav-tab${isProfile ? ' active' : ''}`}
+        onClick={() => setView('profile')}
+        aria-label="Profile"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7"/>
+        </svg>
+        Profile
       </button>
     </nav>
   )

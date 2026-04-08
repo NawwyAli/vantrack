@@ -6,7 +6,7 @@ export const handler = async (event) => {
   }
 
   try {
-    const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
     const { user_id, email } = JSON.parse(event.body)
 
     if (!user_id || !email) {
