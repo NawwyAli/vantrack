@@ -10,9 +10,9 @@ create table if not exists jobs (
   description text not null,
   date date not null,
   price decimal(10,2),
-  status text not null default 'pending', -- pending, confirmed, in_progress, completed
-  recurring boolean default false,
-  recurring_interval text,               -- weekly, fortnightly, monthly, quarterly, annually
+  status text not null default 'pending',
+  is_recurring boolean default false,
+  recurring_interval text,
   archived boolean default false,
   notes text,
   created_at timestamptz default now()

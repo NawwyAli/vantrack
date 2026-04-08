@@ -25,7 +25,7 @@ function transformJob(j) {
     date: j.date,
     price: j.price,
     status: j.status,
-    recurring: j.recurring,
+    recurring: j.is_recurring,
     recurringInterval: j.recurring_interval,
     archived: j.archived,
     notes: j.notes || '',
@@ -64,7 +64,7 @@ export function useJobs(user) {
       date: data.date,
       price: data.price ? parseFloat(data.price) : null,
       status: data.status || 'pending',
-      recurring: data.recurring || false,
+      is_recurring: data.recurring || false,
       recurring_interval: data.recurringInterval || null,
       notes: data.notes || '',
     })
@@ -80,7 +80,7 @@ export function useJobs(user) {
       date: data.date,
       price: data.price ? parseFloat(data.price) : null,
       status: data.status,
-      recurring: data.recurring || false,
+      is_recurring: data.recurring || false,
       recurring_interval: data.recurringInterval || null,
       notes: data.notes || '',
     }).eq('id', id)
@@ -115,7 +115,7 @@ export function useJobs(user) {
       date: new Date().toISOString().split('T')[0],
       price: job.price,
       status: 'pending',
-      recurring: job.recurring,
+      is_recurring: job.recurring,
       recurring_interval: job.recurringInterval || null,
       notes: job.notes || '',
     })
