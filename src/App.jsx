@@ -7,6 +7,7 @@ import { useInvoices } from './hooks/useInvoices.js'
 import { useEngineerProfile } from './hooks/useEngineerProfile.js'
 import { useBookingRequests } from './hooks/useBookingRequests.js'
 import { useChecklists } from './hooks/useChecklists.js'
+import { useExpenses } from './hooks/useExpenses.js'
 
 import AuthScreen from './components/AuthScreen.jsx'
 import TrialWall from './components/TrialWall.jsx'
@@ -34,6 +35,9 @@ import BookingRequestsView from './components/BookingRequestsView.jsx'
 import ChecklistsView from './components/ChecklistsView.jsx'
 import ChecklistForm from './components/ChecklistForm.jsx'
 import ChecklistDetail from './components/ChecklistDetail.jsx'
+import FinanceView from './components/FinanceView.jsx'
+import ExpenseForm from './components/ExpenseForm.jsx'
+import MileageForm from './components/MileageForm.jsx'
 
 export default function App() {
   const { user, profile, loading: authLoading, signIn, signUp, signOut, resetPassword, refreshProfile, updateRole } = useAuth()
@@ -60,6 +64,7 @@ export default function App() {
   const enrichedProfile = engineerProfile ? { ...engineerProfile, logoDataUrl } : engineerProfile
   const { requests: bookingRequests, loading: requestsLoading, updateRequestStatus, deleteRequest: deleteBookingRequest } = useBookingRequests(user)
   const { checklists, loading: checklistsLoading, addChecklist, saveChecklist, completeChecklist, deleteChecklist } = useChecklists(user)
+  const { expenses, mileage, loading: financeLoading, addExpense, updateExpense, deleteExpense, addMileage, updateMileage, deleteMileage } = useExpenses(user)
 
   const [view, setView] = useState('dashboard')
   const [selectedClientId, setSelectedClientId] = useState(null)
@@ -93,6 +98,10 @@ export default function App() {
   const [checklistFormOpen, setChecklistFormOpen] = useState(false)
   const [checklistFormJobId, setChecklistFormJobId] = useState(null)
   const [selectedChecklist, setSelectedChecklist] = useState(null)
+  const [expenseFormOpen, setExpenseFormOpen] = useState(false)
+  const [editingExpense, setEditingExpense] = useState(null)
+  const [mileageFormOpen, setMileageFormOpen] = useState(false)
+  const [editingMileage, setEditingMileage] = useState(null)
 
   async function handleSubscribe() {
     setSubscribing(true)
@@ -392,6 +401,36 @@ export default function App() {
     setChecklistFormOpen(true)
   }
 
+  // --- Finance handlers ---
+
+  async function handleAddExpense(data) {
+    setSaving(true)
+    try { await addExpense(data); setExpenseFormOpen(false); setEditingExpense(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  async function handleUpdateExpense(id, data) {
+    setSaving(true)
+    try { await updateExpense(id, data); setExpenseFormOpen(false); setEditingExpense(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  async function handleAddMileage(data) {
+    setSaving(true)
+    try { await addMileage(data); setMileageFormOpen(false); setEditingMileage(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  async function handleUpdateMileage(id, data) {
+    setSaving(true)
+    try { await updateMileage(id, data); setMileageFormOpen(false); setEditingMileage(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
   // --- Booking request handlers ---
 
   async function handleAcceptBooking(request) {
@@ -588,6 +627,22 @@ export default function App() {
         />
       )}
 
+      {view === 'finance' && (
+        <FinanceView
+          expenses={expenses}
+          mileage={mileage}
+          jobs={jobs}
+          clients={clients}
+          loading={financeLoading}
+          onAddExpense={() => { setEditingExpense(null); setExpenseFormOpen(true) }}
+          onEditExpense={e => { setEditingExpense(e); setExpenseFormOpen(true) }}
+          onDeleteExpense={deleteExpense}
+          onAddMileage={() => { setEditingMileage(null); setMileageFormOpen(true) }}
+          onEditMileage={m => { setEditingMileage(m); setMileageFormOpen(true) }}
+          onDeleteMileage={deleteMileage}
+        />
+      )}
+
       {view === 'profile' && (
         <ProfileView
           user={user}
@@ -614,6 +669,7 @@ export default function App() {
       </div>
 
       <BottomNav view={view} setView={v => { setView(v); if (v !== 'client-detail') setSelectedClientId(null) }} />
+
 
       {/* Client form modal */}
       {clientFormOpen && (
@@ -746,6 +802,31 @@ export default function App() {
           onDuplicate={() => handleDuplicateInvoice(selectedInvoice)}
           onStatusChange={updateInvoiceStatus}
           onSavePaymentLink={savePaymentLink}
+        />
+      )}
+
+      {/* Expense form modal */}
+      {expenseFormOpen && (
+        <ExpenseForm
+          expense={editingExpense}
+          jobs={jobs}
+          clients={clients}
+          saving={saving}
+          onSubmit={editingExpense ? data => handleUpdateExpense(editingExpense.id, data) : handleAddExpense}
+          onClose={() => { setExpenseFormOpen(false); setEditingExpense(null) }}
+        />
+      )}
+
+      {/* Mileage form modal */}
+      {mileageFormOpen && (
+        <MileageForm
+          entry={editingMileage}
+          mileage={mileage}
+          jobs={jobs}
+          clients={clients}
+          saving={saving}
+          onSubmit={editingMileage ? data => handleUpdateMileage(editingMileage.id, data) : handleAddMileage}
+          onClose={() => { setMileageFormOpen(false); setEditingMileage(null) }}
         />
       )}
 

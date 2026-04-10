@@ -2322,3 +2322,124 @@ html, body, #root {
 .template-option:active {
   background: var(--surface3);
 }
+
+/* ── Phase 10: Finance (Expenses & Mileage) ─────────────────────────────── */
+
+/* 5-tab bottom nav: reduce font size */
+.bottom-nav .nav-tab {
+  font-size: 10px;
+}
+
+/* Stats row */
+.finance-stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 12px 16px 4px;
+}
+
+.finance-stat {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+
+.finance-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.finance-stat-label {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+
+.finance-stat-sub {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+/* HMRC rate note */
+.finance-hmrc-note {
+  margin: 4px 16px 0;
+  font-size: 11px;
+  color: var(--text3);
+  line-height: 1.4;
+}
+
+/* Entry card */
+.finance-entry-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+}
+
+.finance-entry-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.finance-entry-cat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.finance-mileage-icon {
+  font-size: 18px;
+  line-height: 1;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.finance-entry-desc {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.finance-entry-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+
+.finance-entry-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.finance-entry-amount {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Mileage allowance hint in form */
+.mileage-allowance-hint {
+  font-size: 13px;
+  color: var(--green);
+  margin-top: 6px;
+  font-weight: 500;
+}

@@ -2,6 +2,7 @@ export default function BottomNav({ view, setView }) {
   const isDashboard = view === 'dashboard'
   const isClients = view === 'clients' || view === 'client-detail'
   const isJobs = view === 'jobs'
+  const isFinance = view === 'finance'
   const isProfile = view === 'profile'
 
   return (
@@ -32,6 +33,14 @@ export default function BottomNav({ view, setView }) {
           <line x1="10" y1="14" x2="14" y2="14"/>
         </svg>
         Jobs
+      </button>
+      <button className={`nav-tab${isFinance ? ' active' : ''}`} onClick={() => setView('finance')} aria-label="Finance">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="5" width="20" height="14" rx="2"/>
+          <path d="M2 10h20"/>
+          <circle cx="12" cy="15" r="1.5" fill="currentColor" stroke="none"/>
+        </svg>
+        Finance
       </button>
       <button className={`nav-tab${isProfile ? ' active' : ''}`} onClick={() => setView('profile')} aria-label="Profile">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
