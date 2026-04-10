@@ -6,6 +6,7 @@ import { useQuotes } from './hooks/useQuotes.js'
 import { useInvoices } from './hooks/useInvoices.js'
 import { useEngineerProfile } from './hooks/useEngineerProfile.js'
 import { useBookingRequests } from './hooks/useBookingRequests.js'
+import { useChecklists } from './hooks/useChecklists.js'
 
 import AuthScreen from './components/AuthScreen.jsx'
 import TrialWall from './components/TrialWall.jsx'
@@ -30,6 +31,9 @@ import InvoicesView from './components/InvoicesView.jsx'
 import InvoiceForm from './components/InvoiceForm.jsx'
 import InvoiceDetail from './components/InvoiceDetail.jsx'
 import BookingRequestsView from './components/BookingRequestsView.jsx'
+import ChecklistsView from './components/ChecklistsView.jsx'
+import ChecklistForm from './components/ChecklistForm.jsx'
+import ChecklistDetail from './components/ChecklistDetail.jsx'
 
 export default function App() {
   const { user, profile, loading: authLoading, signIn, signUp, signOut, resetPassword, refreshProfile, updateRole } = useAuth()
@@ -55,6 +59,7 @@ export default function App() {
   const { engineerProfile, logoDataUrl, saveEngineerProfile, uploadLogo, generateBookingSlug } = useEngineerProfile(user)
   const enrichedProfile = engineerProfile ? { ...engineerProfile, logoDataUrl } : engineerProfile
   const { requests: bookingRequests, loading: requestsLoading, updateRequestStatus, deleteRequest: deleteBookingRequest } = useBookingRequests(user)
+  const { checklists, loading: checklistsLoading, addChecklist, saveChecklist, completeChecklist, deleteChecklist } = useChecklists(user)
 
   const [view, setView] = useState('dashboard')
   const [selectedClientId, setSelectedClientId] = useState(null)
@@ -85,6 +90,9 @@ export default function App() {
   const [selectedInvoice, setSelectedInvoice] = useState(null)
   const [invoiceFilter, setInvoiceFilter] = useState('all')
   const [prefillInvoice, setPrefillInvoice] = useState(null)
+  const [checklistFormOpen, setChecklistFormOpen] = useState(false)
+  const [checklistFormJobId, setChecklistFormJobId] = useState(null)
+  const [selectedChecklist, setSelectedChecklist] = useState(null)
 
   async function handleSubscribe() {
     setSubscribing(true)
@@ -368,6 +376,22 @@ export default function App() {
     setInvoiceFormOpen(true)
   }
 
+  // --- Checklist handlers ---
+
+  async function handleAddChecklist(data) {
+    setSaving(true)
+    try { await addChecklist(data); setChecklistFormOpen(false); setChecklistFormJobId(null) }
+    catch (err) { alert(err.message) }
+    finally { setSaving(false) }
+  }
+
+  function handleCreateChecklistFromJob(job) {
+    setSelectedJob(null)
+    setChecklistFormJobId(job.id)
+    setWorkTab('checklists')
+    setChecklistFormOpen(true)
+  }
+
   // --- Booking request handlers ---
 
   async function handleAcceptBooking(request) {
@@ -550,6 +574,16 @@ export default function App() {
               bookingUrl={engineerProfile?.booking_slug ? `${window.location.origin}/book/${engineerProfile.booking_slug}` : null}
             />
           }
+          checklistsSlot={
+            <ChecklistsView
+              checklists={checklists}
+              jobs={jobs}
+              clients={clients}
+              loading={checklistsLoading}
+              onChecklistClick={c => setSelectedChecklist(c)}
+              onAddChecklist={() => { setChecklistFormJobId(null); setChecklistFormOpen(true) }}
+            />
+          }
           pendingRequestsCount={bookingRequests.filter(r => r.status === 'pending').length}
         />
       )}
@@ -656,6 +690,7 @@ export default function App() {
           onDeletePhoto={deleteJobPhoto}
           onCreateQuote={() => handleCreateQuoteFromJob(selectedJob)}
           onCreateInvoice={() => handleCreateInvoiceFromJob(selectedJob)}
+          onCreateChecklist={() => handleCreateChecklistFromJob(selectedJob)}
         />
       )}
 
@@ -711,6 +746,31 @@ export default function App() {
           onDuplicate={() => handleDuplicateInvoice(selectedInvoice)}
           onStatusChange={updateInvoiceStatus}
           onSavePaymentLink={savePaymentLink}
+        />
+      )}
+
+      {/* Checklist form modal */}
+      {checklistFormOpen && (
+        <ChecklistForm
+          jobs={jobs}
+          clients={clients}
+          prefillJobId={checklistFormJobId}
+          saving={saving}
+          onSubmit={handleAddChecklist}
+          onClose={() => { setChecklistFormOpen(false); setChecklistFormJobId(null) }}
+        />
+      )}
+
+      {/* Checklist detail modal */}
+      {selectedChecklist && (
+        <ChecklistDetail
+          checklist={checklists.find(c => c.id === selectedChecklist.id) || selectedChecklist}
+          jobs={jobs}
+          clients={clients}
+          onClose={() => setSelectedChecklist(null)}
+          onSave={saveChecklist}
+          onComplete={completeChecklist}
+          onDelete={async (id) => { await deleteChecklist(id); setSelectedChecklist(null) }}
         />
       )}
 

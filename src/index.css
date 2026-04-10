@@ -2186,3 +2186,139 @@ html, body, #root {
   border-radius: 2px;
   flex-shrink: 0;
 }
+
+/* ── Phase 9: Compliance Checklists ─────────────────────────────────────── */
+
+/* 5-segment bar: tighter font */
+.work-segment-bar--5 .work-segment {
+  font-size: 11.5px;
+}
+
+/* Status badge on checklist cards / detail */
+.checklist-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.checklist-status-badge.draft {
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+.checklist-status-badge.complete {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+/* Mini progress bar on checklist cards */
+.checklist-mini-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface3);
+  overflow: hidden;
+  max-width: 80px;
+}
+.checklist-mini-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+/* Full progress bar in detail modal */
+.checklist-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.checklist-progress-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface3);
+  overflow: hidden;
+}
+.checklist-progress-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 3px;
+  transition: width 0.25s;
+}
+
+/* Individual checklist item row */
+.checklist-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.checklist-item:last-child {
+  border-bottom: none;
+}
+.checklist-item-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Pass / Fail / N/A buttons */
+.checklist-status-btn {
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+  min-width: 38px;
+}
+.checklist-status-btn:disabled {
+  cursor: default;
+  opacity: 0.9;
+}
+
+/* Inline note toggle link */
+.checklist-notes-toggle {
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 0 0;
+  display: block;
+  text-align: left;
+  font-family: inherit;
+}
+.checklist-notes-toggle:hover {
+  color: var(--blue);
+}
+
+/* Editable item row in form */
+.checklist-edit-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+}
+
+/* Template picker button */
+.template-option {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text);
+  font-family: inherit;
+  transition: background 0.12s;
+}
+.template-option:hover,
+.template-option:active {
+  background: var(--surface3);
+}
