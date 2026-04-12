@@ -23,6 +23,8 @@ function ChevronRight() {
 }
 
 export default function ProfileView({ user, profile, engineerProfile, logoDataUrl, onSignOut, onResetPassword, onUpdateRole, onSaveEngineerProfile, onUploadLogo, onGenerateBookingSlug }) {
+  const ep = engineerProfile || {}
+
   const [editingRole, setEditingRole] = useState(false)
   const [selectedRole, setSelectedRole] = useState(profile?.role || '')
   const [savingRole, setSavingRole] = useState(false)
@@ -39,8 +41,6 @@ export default function ProfileView({ user, profile, engineerProfile, logoDataUr
   const [resetSent, setResetSent] = useState(false)
   const [error, setError] = useState('')
   const logoInputRef = useRef()
-
-  const ep = engineerProfile || {}
 
   const [reviewUrl, setReviewUrl] = useState(ep.review_url || '')
   const [reviewUrlEditing, setReviewUrlEditing] = useState(false)
