@@ -36,21 +36,17 @@ export default function Header({ view, selectedClient, profile, onBack, onEdit, 
     </button>
   )
 
+  const signOutBtn = (
+    <button className="icon-btn" onClick={onSignOut} aria-label="Sign out" title="Sign out">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M7 3H4a1 1 0 00-1 1v12a1 1 0 001 1h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M13 14l3-4-3-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M16 10H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    </button>
+  )
+
   const renderRight = () => {
-    if (view === 'dashboard') {
-      return (
-        <div style={{ display: 'flex', gap: '4px' }}>
-          {supportBtn}
-          <button className="icon-btn" onClick={onSignOut} aria-label="Sign out" title="Sign out">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M7 3H4a1 1 0 00-1 1v12a1 1 0 001 1h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              <path d="M13 14l3-4-3-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M16 10H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-          </button>
-        </div>
-      )
-    }
     if (view === 'clients') {
       return (
         <div style={{ display: 'flex', gap: '4px' }}>
@@ -60,6 +56,7 @@ export default function Header({ view, selectedClient, profile, onBack, onEdit, 
               <path d="M10 4V16M4 10H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </button>
+          {signOutBtn}
         </div>
       )
     }
@@ -72,16 +69,16 @@ export default function Header({ view, selectedClient, profile, onBack, onEdit, 
               <path d="M14.5 2.5L17.5 5.5L7 16H4V13L14.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
+          {signOutBtn}
         </div>
       )
     }
-    if (view === 'jobs') {
-      return supportBtn
-    }
-    if (view === 'profile') {
-      return supportBtn
-    }
-    return null
+    return (
+      <div style={{ display: 'flex', gap: '4px' }}>
+        {supportBtn}
+        {signOutBtn}
+      </div>
+    )
   }
 
   return (

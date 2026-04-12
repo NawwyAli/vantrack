@@ -6,16 +6,37 @@ const ROLES = [
   { value: 'both', label: '⚡ Both' },
 ]
 
+function EyeIcon({ open }) {
+  return open ? (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  ) : (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+      <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  )
+}
+
 export default function AuthScreen({ onSignIn, onSignUp, onResetPassword, onShowLegal }) {
   const [mode, setMode] = useState('login') // 'login' | 'signup' | 'forgot'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [role, setRole] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  const switchMode = m => { setMode(m); setError(''); setSuccess('') }
+  const switchMode = m => {
+    setMode(m); setError(''); setSuccess('')
+    setShowPassword(false); setShowConfirmPassword(false)
+  }
 
   async function handleSubmit() {
     setError(''); setSuccess('')
@@ -26,7 +47,6 @@ export default function AuthScreen({ onSignIn, onSignUp, onResetPassword, onShow
       try {
         await onResetPassword(email.trim())
         setMode('login')
-        setError('')
         setSuccess('Password reset email sent — check your inbox.')
       } catch (err) {
         setError(err.message || 'Something went wrong')
@@ -37,8 +57,11 @@ export default function AuthScreen({ onSignIn, onSignUp, onResetPassword, onShow
     }
 
     if (!email.trim() || !password.trim()) { setError('Please fill in all fields'); return }
-    if (mode === 'signup' && !role) { setError('Please select your trade'); return }
-    if (mode === 'signup' && password.length < 6) { setError('Password must be at least 6 characters'); return }
+    if (mode === 'signup') {
+      if (!role) { setError('Please select your trade'); return }
+      if (password.length < 6) { setError('Password must be at least 6 characters'); return }
+      if (password !== confirmPassword) { setError('Passwords do not match'); return }
+    }
     setLoading(true)
     try {
       if (mode === 'login') {
@@ -46,7 +69,6 @@ export default function AuthScreen({ onSignIn, onSignUp, onResetPassword, onShow
       } else {
         await onSignUp(email.trim(), password, role)
         setMode('login')
-        setError('')
         setSuccess('Account created! Check your email to confirm, then log in.')
       }
     } catch (err) {
@@ -63,7 +85,7 @@ export default function AuthScreen({ onSignIn, onSignUp, onResetPassword, onShow
       <div className="auth-logo">
         <div className="auth-logo-icon">🚐</div>
         <div className="auth-logo-title">VanTrack</div>
-        <div className="auth-logo-sub">Trade Management for Gas Engineers & Plumbers</div>
+        <div className="auth-logo-sub">Trade Management for Gas Engineers &amp; Plumbers</div>
       </div>
 
       <div className="auth-card">
@@ -106,10 +128,36 @@ export default function AuthScreen({ onSignIn, onSignUp, onResetPassword, onShow
                 </button>
               )}
             </label>
-            <input className="form-input" type="password"
-              placeholder={mode === 'signup' ? 'Min. 6 characters' : 'Password'}
-              value={password} onChange={e => setPassword(e.target.value)} onKeyDown={handleKey}
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
+            <div style={{ position: 'relative' }}>
+              <input className="form-input" type={showPassword ? 'text' : 'password'}
+                placeholder={mode === 'signup' ? 'Min. 6 characters' : 'Password'}
+                value={password} onChange={e => setPassword(e.target.value)} onKeyDown={handleKey}
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                style={{ paddingRight: '40px' }} />
+              <button type="button" onClick={() => setShowPassword(p => !p)}
+                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', padding: '2px', display: 'flex', alignItems: 'center' }}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                <EyeIcon open={showPassword} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {mode === 'signup' && (
+          <div className="form-group">
+            <label className="form-label">Confirm Password</label>
+            <div style={{ position: 'relative' }}>
+              <input className="form-input" type={showConfirmPassword ? 'text' : 'password'}
+                placeholder="Repeat password"
+                value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} onKeyDown={handleKey}
+                autoComplete="new-password"
+                style={{ paddingRight: '40px' }} />
+              <button type="button" onClick={() => setShowConfirmPassword(p => !p)}
+                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', padding: '2px', display: 'flex', alignItems: 'center' }}
+                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}>
+                <EyeIcon open={showConfirmPassword} />
+              </button>
+            </div>
           </div>
         )}
 
