@@ -2443,3 +2443,42 @@ html, body, #root {
   margin-top: 6px;
   font-weight: 500;
 }
+
+/* ── Phase 12: Client & Certificate Management Improvements ─────────────── */
+
+/* Tap-to-contact links */
+.info-link {
+  color: var(--blue);
+  text-decoration: none;
+}
+.info-link:active {
+  opacity: 0.7;
+}
+
+/* Client quick-stats row on ClientDetail */
+.client-stats-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.client-stat {
+  flex: 1;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+
+.client-stat-num {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.client-stat-lbl {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 2px;
+}

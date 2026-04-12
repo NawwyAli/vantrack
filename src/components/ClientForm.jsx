@@ -18,9 +18,6 @@ export default function ClientForm({ client, saving, onSubmit, onClose }) {
   const validate = () => {
     const errs = {}
     if (!name.trim()) errs.name = 'Required'
-    if (!address.trim()) errs.address = 'Required'
-    if (!phone.trim()) errs.phone = 'Required'
-    if (!email.trim()) errs.email = 'Required'
     if (!isEditing && !propertyAddress.trim()) errs.propertyAddress = 'Required'
     return errs
   }
@@ -55,29 +52,24 @@ export default function ClientForm({ client, saving, onSubmit, onClose }) {
         </div>
 
         <div className="form-group">
-          <label className="form-label">Contact Address *</label>
-          <input className={`form-input${errors.address ? ' input-error' : ''}`} type="text"
+          <label className="form-label">Contact Address <span style={{ color: 'var(--text3)' }}>(optional)</span></label>
+          <input className="form-input" type="text"
             placeholder="Landlord's contact address" value={address}
-            onChange={e => { setAddress(e.target.value); clearError('address') }} />
-          {errors.address && <div className="form-error">{errors.address}</div>}
-        </div>
-
-        <div className="form-row">
-          <div className="form-group" style={{ flex: 1 }}>
-            <label className="form-label">Phone *</label>
-            <input className={`form-input${errors.phone ? ' input-error' : ''}`} type="tel"
-              placeholder="Phone number" value={phone}
-              onChange={e => { setPhone(e.target.value); clearError('phone') }} />
-            {errors.phone && <div className="form-error">{errors.phone}</div>}
-          </div>
+            onChange={e => setAddress(e.target.value)} />
         </div>
 
         <div className="form-group">
-          <label className="form-label">Email *</label>
-          <input className={`form-input${errors.email ? ' input-error' : ''}`} type="email"
+          <label className="form-label">Phone <span style={{ color: 'var(--text3)' }}>(optional)</span></label>
+          <input className="form-input" type="tel"
+            placeholder="Phone number" value={phone}
+            onChange={e => setPhone(e.target.value)} />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Email <span style={{ color: 'var(--text3)' }}>(optional)</span></label>
+          <input className="form-input" type="email"
             placeholder="Email address" value={email}
-            onChange={e => { setEmail(e.target.value); clearError('email') }} />
-          {errors.email && <div className="form-error">{errors.email}</div>}
+            onChange={e => setEmail(e.target.value)} />
         </div>
 
         {!isEditing && (

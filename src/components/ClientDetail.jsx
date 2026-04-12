@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { getCertStatus, getDaysLabel, fmtDate, getExpiryDate } from '../utils.js'
 import ClientNotes from './ClientNotes.jsx'
 import { JOB_STATUSES } from '../hooks/useJobs.js'
@@ -24,12 +25,49 @@ export default function ClientDetail({
   onRenew, onAddCert, onEditCert, onDeleteCert,
   jobs, onJobClick, onAddJob,
   fetchNotes, addNote, deleteNote,
+  onSendCertSummary,
 }) {
+  const [summarySending, setSummarySending] = useState(false)
+  const [summaryResult, setSummaryResult] = useState(null)
+
   if (!client) return null
+
+  const propCount = client.properties.length
+  const expired  = client.properties.filter(p => getCertStatus(p.certificate?.issueDate) === 'red').length
+  const dueSoon  = client.properties.filter(p => getCertStatus(p.certificate?.issueDate) === 'amber').length
+  const valid    = client.properties.filter(p => getCertStatus(p.certificate?.issueDate) === 'green').length
 
   return (
     <div className="page">
       <div className="page-content">
+
+        {/* Quick stats */}
+        {propCount > 0 && (
+          <div className="client-stats-row">
+            <div className="client-stat">
+              <div className="client-stat-num">{propCount}</div>
+              <div className="client-stat-lbl">Properties</div>
+            </div>
+            {expired > 0 && (
+              <div className="client-stat">
+                <div className="client-stat-num" style={{ color: 'var(--red)' }}>{expired}</div>
+                <div className="client-stat-lbl">Expired</div>
+              </div>
+            )}
+            {dueSoon > 0 && (
+              <div className="client-stat">
+                <div className="client-stat-num" style={{ color: 'var(--amber)' }}>{dueSoon}</div>
+                <div className="client-stat-lbl">Due Soon</div>
+              </div>
+            )}
+            {valid > 0 && (
+              <div className="client-stat">
+                <div className="client-stat-num" style={{ color: 'var(--green)' }}>{valid}</div>
+                <div className="client-stat-lbl">Valid</div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Client info card */}
         <div className="info-card">
@@ -57,17 +95,32 @@ export default function ClientDetail({
               <div className="info-icon">📞</div>
               <div>
                 <div className="info-label">Phone</div>
-                <div className="info-value">{client.phone}</div>
+                <a href={`tel:${client.phone}`} className="info-value info-link">{client.phone}</a>
               </div>
             </div>
           )}
           {client.email && (
             <div className="info-row">
               <div className="info-icon">✉️</div>
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="info-label">Email</div>
-                <div className="info-value">{client.email}</div>
+                <a href={`mailto:${client.email}`} className="info-value info-link">{client.email}</a>
               </div>
+              {onSendCertSummary && propCount > 0 && (
+                <button
+                  className="btn btn-ghost btn-sm"
+                  style={{ flexShrink: 0 }}
+                  disabled={summarySending || summaryResult === 'sent'}
+                  onClick={async () => {
+                    setSummarySending(true)
+                    try { await onSendCertSummary(client); setSummaryResult('sent') }
+                    catch (err) { alert(err.message); setSummaryResult('error') }
+                    finally { setSummarySending(false) }
+                  }}
+                >
+                  {summarySending ? 'Sending…' : summaryResult === 'sent' ? '✓ Sent' : '✉ Cert Summary'}
+                </button>
+              )}
             </div>
           )}
         </div>

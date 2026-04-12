@@ -402,6 +402,30 @@ export default function App() {
     setChecklistFormOpen(true)
   }
 
+  // --- Client cert summary handler ---
+
+  async function handleSendCertSummary(client) {
+    if (!client.email) throw new Error('Client has no email address.')
+    const ep = engineerProfile || {}
+    const res = await fetch('/.netlify/functions/send-cert-summary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: client.email,
+        clientName: client.name,
+        properties: client.properties.map(p => ({
+          address: p.address,
+          certificate: p.certificate ? { issueDate: p.certificate.issueDate } : null,
+        })),
+        engineerName: ep.business_name || 'Your Engineer',
+        engineerEmail: ep.email || '',
+        engineerPhone: ep.phone || '',
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to send cert summary')
+  }
+
   // --- Finance handlers ---
 
   async function handleAddExpense(data) {
@@ -636,6 +660,7 @@ export default function App() {
           fetchNotes={fetchNotes}
           addNote={addNote}
           deleteNote={deleteNote}
+          onSendCertSummary={handleSendCertSummary}
         />
       )}
 

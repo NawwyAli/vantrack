@@ -65,6 +65,14 @@ export default function CertModal({ property, saving, onSubmit, onClose, editMod
           <input className="form-input" type="date" value={issueDate}
             onChange={e => { setIssueDate(e.target.value); setError('') }} />
           {error && <div className="form-error">{error}</div>}
+          {issueDate && (
+            <div style={{ fontSize: '12px', color: 'var(--text2)', marginTop: '6px' }}>
+              Expiry:{' '}
+              <strong style={{ color: 'var(--text)' }}>
+                {fmtDate(getExpiryDate(issueDate).toISOString().slice(0, 10))}
+              </strong>
+            </div>
+          )}
         </div>
 
         <div className="form-group">
