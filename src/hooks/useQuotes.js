@@ -22,6 +22,7 @@ function transformQuote(q) {
     total: parseFloat(q.total || 0),
     notes: q.notes || '',
     validUntil: q.valid_until,
+    followupSentAt: q.followup_sent_at || null,
     createdAt: q.created_at,
     updatedAt: q.updated_at,
   }
@@ -132,9 +133,16 @@ export function useQuotes(user) {
     await fetchQuotes()
   }
 
+  async function markFollowupSent(id) {
+    const sentAt = new Date().toISOString()
+    const { error } = await supabase.from('quotes').update({ followup_sent_at: sentAt }).eq('id', id)
+    if (error) throw error
+    setQuotes(prev => prev.map(q => q.id === id ? { ...q, followupSentAt: sentAt } : q))
+  }
+
   return {
     quotes, loading, fetchQuotes,
     addQuote, updateQuote, updateQuoteStatus, deleteQuote, duplicateQuote,
-    calcTotals,
+    calcTotals, markFollowupSent,
   }
 }

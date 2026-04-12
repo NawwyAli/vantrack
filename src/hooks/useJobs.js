@@ -31,6 +31,7 @@ function transformJob(j) {
     recurringInterval: j.recurring_interval,
     archived: j.archived,
     notes: j.notes || '',
+    smsReminderSentAt: j.sms_reminder_sent_at || null,
     createdAt: j.created_at,
     photos: (j.job_photos || []).map(p => ({
       id: p.id,
@@ -172,10 +173,18 @@ export function useJobs(user) {
     return data || []
   }
 
+  async function markSmsReminderSent(id) {
+    const sentAt = new Date().toISOString()
+    const { error } = await supabase.from('jobs').update({ sms_reminder_sent_at: sentAt }).eq('id', id)
+    if (error) throw error
+    setJobs(prev => prev.map(j => j.id === id ? { ...j, smsReminderSentAt: sentAt } : j))
+  }
+
   return {
     jobs, loading, fetchJobs,
     addJob, updateJob, updateJobStatus, archiveJob, deleteJob, duplicateJob,
     uploadJobPhoto, deleteJobPhoto,
     addNote, deleteNote, fetchNotes,
+    markSmsReminderSent,
   }
 }

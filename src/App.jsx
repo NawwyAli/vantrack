@@ -52,8 +52,9 @@ export default function App() {
     addJob, updateJob, updateJobStatus, archiveJob, deleteJob, duplicateJob,
     uploadJobPhoto, deleteJobPhoto,
     addNote, deleteNote, fetchNotes,
+    markSmsReminderSent,
   } = useJobs(user)
-  const { quotes, loading: quotesLoading, addQuote, updateQuote, updateQuoteStatus, deleteQuote, duplicateQuote } = useQuotes(user)
+  const { quotes, loading: quotesLoading, addQuote, updateQuote, updateQuoteStatus, deleteQuote, duplicateQuote, markFollowupSent } = useQuotes(user)
   const {
     invoices, loading: invoicesLoading,
     addInvoice, updateInvoice, updateInvoiceStatus, savePaymentLink,
@@ -431,6 +432,75 @@ export default function App() {
     finally { setSaving(false) }
   }
 
+  // --- Reminder & follow-up handlers ---
+
+  async function handleSendSmsReminder(job) {
+    const client = clients.find(c => c.id === job.clientId)
+    if (!client?.phone) throw new Error('Client has no phone number on file.')
+    const ep = engineerProfile || {}
+    const res = await fetch('/.netlify/functions/send-sms-reminder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: client.phone,
+        clientName: client.name,
+        jobDescription: job.description,
+        jobDate: job.date,
+        jobTime: job.startTime || null,
+        engineerName: ep.business_name || 'Your Engineer',
+        engineerPhone: ep.phone || '',
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to send SMS')
+    await markSmsReminderSent(job.id)
+  }
+
+  async function handleSendReviewRequest(job) {
+    const client = clients.find(c => c.id === job.clientId)
+    if (!client?.email) throw new Error('Client has no email address on file.')
+    const ep = engineerProfile || {}
+    const res = await fetch('/.netlify/functions/send-review-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: client.email,
+        clientName: client.name,
+        jobDescription: job.description,
+        engineerName: ep.business_name || 'Your Engineer',
+        engineerEmail: ep.email || '',
+        engineerPhone: ep.phone || '',
+        reviewUrl: ep.review_url || '',
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to send review request')
+  }
+
+  async function handleSendQuoteFollowup(quote) {
+    const client = clients.find(c => c.id === quote.clientId)
+    if (!client?.email) throw new Error('Client has no email address on file.')
+    const ep = engineerProfile || {}
+    const firstItem = quote.lineItems?.[0]
+    const res = await fetch('/.netlify/functions/send-quote-followup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: client.email,
+        clientName: client.name,
+        quoteNumber: quote.quoteNumber,
+        total: quote.total,
+        description: firstItem?.description || '',
+        engineerName: ep.business_name || 'Your Engineer',
+        engineerEmail: ep.email || '',
+        engineerPhone: ep.phone || '',
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to send follow-up')
+    await markFollowupSent(quote.id)
+  }
+
   // --- Booking request handlers ---
 
   async function handleAcceptBooking(request) {
@@ -747,6 +817,8 @@ export default function App() {
           onCreateQuote={() => handleCreateQuoteFromJob(selectedJob)}
           onCreateInvoice={() => handleCreateInvoiceFromJob(selectedJob)}
           onCreateChecklist={() => handleCreateChecklistFromJob(selectedJob)}
+          onSendReminder={handleSendSmsReminder}
+          onSendReview={handleSendReviewRequest}
         />
       )}
 
@@ -775,6 +847,7 @@ export default function App() {
           onDuplicate={() => handleDuplicateQuote(selectedQuote)}
           onStatusChange={updateQuoteStatus}
           onConvertToInvoice={() => handleConvertQuoteToInvoice(selectedQuote)}
+          onSendFollowup={handleSendQuoteFollowup}
         />
       )}
 

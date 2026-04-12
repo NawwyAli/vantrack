@@ -11,10 +11,14 @@ function fmtPrice(p) {
   return '£' + parseFloat(p).toFixed(2)
 }
 
-export default function JobDetail({ job, clients, onClose, onEdit, onDelete, onArchive, onDuplicate, onStatusChange, onUploadPhoto, onDeletePhoto, onCreateQuote, onCreateInvoice, onCreateChecklist }) {
+export default function JobDetail({ job, clients, onClose, onEdit, onDelete, onArchive, onDuplicate, onStatusChange, onUploadPhoto, onDeletePhoto, onCreateQuote, onCreateInvoice, onCreateChecklist, onSendReminder, onSendReview }) {
   const [photoUploading, setPhotoUploading] = useState(false)
   const [photoError, setPhotoError] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [reminderSending, setReminderSending] = useState(false)
+  const [reminderResult, setReminderResult] = useState(null) // 'sent' | 'error' | null
+  const [reviewSending, setReviewSending] = useState(false)
+  const [reviewResult, setReviewResult] = useState(null)
   const fileRef = useRef()
 
   const client = clients.find(c => c.id === job.clientId)
@@ -74,6 +78,49 @@ export default function JobDetail({ job, clients, onClose, onEdit, onDelete, onA
           <div style={{ marginBottom: '16px' }}>
             <div className="job-detail-label" style={{ marginBottom: '4px' }}>Notes</div>
             <p style={{ fontSize: '14px', color: 'var(--text2)', lineHeight: '1.5', margin: 0 }}>{job.notes}</p>
+          </div>
+        )}
+
+        {/* Communications */}
+        {(onSendReminder || onSendReview) && (
+          <div style={{ marginBottom: '16px' }}>
+            <div className="job-detail-label" style={{ marginBottom: '8px' }}>Communications</div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {onSendReminder && job.status !== 'completed' && (
+                <button
+                  className="btn btn-ghost btn-sm"
+                  disabled={reminderSending || reminderResult === 'sent' || !!job.smsReminderSentAt}
+                  onClick={async () => {
+                    setReminderSending(true)
+                    try { await onSendReminder(job); setReminderResult('sent') }
+                    catch { setReminderResult('error') }
+                    finally { setReminderSending(false) }
+                  }}
+                >
+                  {reminderSending ? 'Sending…'
+                    : (reminderResult === 'sent' || job.smsReminderSentAt) ? '✓ Reminder Sent'
+                    : reminderResult === 'error' ? '✕ Failed — Retry'
+                    : '📱 SMS Reminder'}
+                </button>
+              )}
+              {onSendReview && job.status === 'completed' && (
+                <button
+                  className="btn btn-ghost btn-sm"
+                  disabled={reviewSending || reviewResult === 'sent'}
+                  onClick={async () => {
+                    setReviewSending(true)
+                    try { await onSendReview(job); setReviewResult('sent') }
+                    catch { setReviewResult('error') }
+                    finally { setReviewSending(false) }
+                  }}
+                >
+                  {reviewSending ? 'Sending…'
+                    : reviewResult === 'sent' ? '✓ Review Request Sent'
+                    : reviewResult === 'error' ? '✕ Failed — Retry'
+                    : '⭐ Request Review'}
+                </button>
+              )}
+            </div>
           </div>
         )}
 

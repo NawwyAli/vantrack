@@ -7,11 +7,13 @@ function fmtDate(d) {
   return new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-export default function QuoteDetail({ quote, clients, engineerProfile, onClose, onEdit, onDelete, onDuplicate, onStatusChange, onConvertToInvoice }) {
+export default function QuoteDetail({ quote, clients, engineerProfile, onClose, onEdit, onDelete, onDuplicate, onStatusChange, onConvertToInvoice, onSendFollowup }) {
   const [emailing, setEmailing] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [emailError, setEmailError] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [followupSending, setFollowupSending] = useState(false)
+  const [followupResult, setFollowupResult] = useState(null)
 
   const client = clients.find(c => c.id === quote.clientId)
   const statusInfo = QUOTE_STATUSES.find(s => s.value === quote.status)
@@ -139,6 +141,28 @@ export default function QuoteDetail({ quote, clients, engineerProfile, onClose, 
         </div>
         {emailError && <div className="auth-error" style={{ marginBottom: '12px' }}>{emailError}</div>}
         {emailSent && <div className="auth-success" style={{ marginBottom: '12px' }}>Quote emailed to {client?.email} and marked as Sent.</div>}
+
+        {/* Follow-up */}
+        {onSendFollowup && quote.status === 'sent' && (
+          <div style={{ marginBottom: '16px' }}>
+            <button
+              className="btn btn-ghost"
+              style={{ width: '100%', justifyContent: 'center' }}
+              disabled={followupSending || followupResult === 'sent' || !!quote.followupSentAt}
+              onClick={async () => {
+                setFollowupSending(true)
+                try { await onSendFollowup(quote); setFollowupResult('sent') }
+                catch { setFollowupResult('error') }
+                finally { setFollowupSending(false) }
+              }}
+            >
+              {followupSending ? 'Sending…'
+                : (followupResult === 'sent' || quote.followupSentAt) ? '✓ Follow-up Sent'
+                : followupResult === 'error' ? '✕ Failed — Retry'
+                : '↩ Send Follow-up Email'}
+            </button>
+          </div>
+        )}
 
         {/* Footer actions */}
         <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>

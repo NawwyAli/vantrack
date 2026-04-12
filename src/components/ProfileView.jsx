@@ -42,6 +42,10 @@ export default function ProfileView({ user, profile, engineerProfile, logoDataUr
 
   const ep = engineerProfile || {}
 
+  const [reviewUrl, setReviewUrl] = useState(ep.review_url || '')
+  const [reviewUrlEditing, setReviewUrlEditing] = useState(false)
+  const [reviewUrlSaving, setReviewUrlSaving] = useState(false)
+
   const [biz, setBiz] = useState({
     business_name: ep.business_name || '',
     business_address: ep.business_address || '',
@@ -352,6 +356,91 @@ export default function ProfileView({ user, profile, engineerProfile, logoDataUr
             </div>
           </>
         )}
+      </div>
+
+      {/* Follow-ups & Reminders */}
+      <div className="settings-group">
+        <div className="settings-label">Follow-ups &amp; Reminders</div>
+
+        {/* SMS reminders toggle */}
+        <div className="settings-row" style={{ cursor: 'default' }}>
+          <div>
+            <div>Auto SMS Reminders</div>
+            <div style={{ fontSize: '12px', color: 'var(--text3)', marginTop: '2px' }}>
+              Send clients an SMS the day before their job
+            </div>
+          </div>
+          <button
+            type="button"
+            className={`toggle-btn${ep.auto_sms_reminders ? ' on' : ''}`}
+            onClick={() => onSaveEngineerProfile({ auto_sms_reminders: !ep.auto_sms_reminders })}
+          >
+            <span className="toggle-knob" />
+          </button>
+        </div>
+
+        {/* Quote follow-up days */}
+        <div className="settings-row" style={{ cursor: 'default', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
+          <div>
+            <div>Auto Quote Follow-up</div>
+            <div style={{ fontSize: '12px', color: 'var(--text3)', marginTop: '2px' }}>
+              Days after sending before a follow-up email is sent (0 = disabled)
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            {[0, 2, 3, 5, 7].map(d => (
+              <button
+                key={d}
+                className={`filter-chip${(ep.quote_followup_days || 0) === d ? ' active' : ''}`}
+                onClick={() => onSaveEngineerProfile({ quote_followup_days: d })}
+              >
+                {d === 0 ? 'Off' : `${d}d`}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Review URL */}
+        <div style={{ padding: '8px 16px 12px' }}>
+          <div className="form-label" style={{ marginBottom: '6px' }}>
+            Review Link <span style={{ color: 'var(--text3)' }}>(Google, Trustpilot, etc.)</span>
+          </div>
+          {reviewUrlEditing ? (
+            <>
+              <input
+                className="form-input"
+                type="url"
+                placeholder="https://g.page/r/your-review-link"
+                value={reviewUrl}
+                onChange={e => setReviewUrl(e.target.value)}
+                style={{ marginBottom: '8px' }}
+              />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button className="btn btn-ghost btn-sm" onClick={() => { setReviewUrlEditing(false); setReviewUrl(ep.review_url || '') }}>Cancel</button>
+                <button className="btn btn-primary btn-sm" disabled={reviewUrlSaving} onClick={async () => {
+                  setReviewUrlSaving(true)
+                  try { await onSaveEngineerProfile({ review_url: reviewUrl }); setReviewUrlEditing(false) } catch {}
+                  finally { setReviewUrlSaving(false) }
+                }}>
+                  {reviewUrlSaving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </>
+          ) : (
+            <button
+              className="settings-row settings-row-btn"
+              style={{ margin: 0, padding: '6px 0', background: 'transparent', border: 'none', width: '100%', justifyContent: 'space-between' }}
+              onClick={() => { setReviewUrl(ep.review_url || ''); setReviewUrlEditing(true) }}
+            >
+              <span style={{ fontSize: '13px', color: ep.review_url ? 'var(--blue)' : 'var(--text3)', wordBreak: 'break-all', textAlign: 'left' }}>
+                {ep.review_url || 'Add your review link…'}
+              </span>
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0 }}>
+                <path d="M14.5 2.5L17.5 5.5L7 16H4V13L14.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Trade */}
