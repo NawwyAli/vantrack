@@ -7,14 +7,14 @@ export default function BottomNav({ view, setView }) {
 
   return (
     <nav className="bottom-nav">
-      <button className={`nav-tab${isDashboard ? ' active' : ''}`} onClick={() => setView('dashboard')} aria-label="Dashboard">
+      <button className={`nav-tab${isDashboard ? ' active' : ''}`} onClick={() => setView('dashboard')} aria-label="Certificates">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="3" width="7" height="7" rx="1"/>
           <rect x="14" y="3" width="7" height="7" rx="1"/>
           <rect x="3" y="14" width="7" height="7" rx="1"/>
           <rect x="14" y="14" width="7" height="7" rx="1"/>
         </svg>
-        Dashboard
+        Certificates
       </button>
       <button className={`nav-tab${isClients ? ' active' : ''}`} onClick={() => setView('clients')} aria-label="Clients">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

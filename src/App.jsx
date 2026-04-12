@@ -10,6 +10,7 @@ import { useChecklists } from './hooks/useChecklists.js'
 import { useExpenses } from './hooks/useExpenses.js'
 
 import AuthScreen from './components/AuthScreen.jsx'
+import ResetPasswordForm from './components/ResetPasswordForm.jsx'
 import TrialWall from './components/TrialWall.jsx'
 import LegalPage from './components/LegalPage.jsx'
 import Onboarding from './components/Onboarding.jsx'
@@ -40,7 +41,7 @@ import ExpenseForm from './components/ExpenseForm.jsx'
 import MileageForm from './components/MileageForm.jsx'
 
 export default function App() {
-  const { user, profile, loading: authLoading, signIn, signUp, signOut, resetPassword, refreshProfile, updateRole } = useAuth()
+  const { user, profile, loading: authLoading, isPasswordRecovery, signIn, signUp, signOut, resetPassword, updatePassword, refreshProfile, updateRole } = useAuth()
   const {
     clients, loading: dataLoading,
     addClient, updateClient, deleteClient,
@@ -157,6 +158,8 @@ export default function App() {
       </div>
     )
   }
+
+  if (isPasswordRecovery) return <ResetPasswordForm onUpdatePassword={updatePassword} />
 
   if (!user) return <AuthScreen onSignIn={signIn} onSignUp={signUp} onResetPassword={resetPassword} onShowLegal={setLegalPage} />
 
@@ -880,6 +883,7 @@ export default function App() {
       {invoiceFormOpen && (
         <InvoiceForm
           clients={clients}
+          jobs={jobs}
           engineerProfile={engineerProfile}
           invoice={editingInvoice || prefillInvoice || null}
           saving={saving}
