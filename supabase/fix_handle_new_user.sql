@@ -3,10 +3,7 @@
 -- Run this in the Supabase SQL Editor.
 
 create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer set search_path = public
-as $$
+returns trigger as $$
 begin
   insert into public.profiles (id, role, trial_ends_at, subscription_status)
   values (
@@ -18,7 +15,7 @@ begin
   on conflict (id) do nothing;
   return new;
 end;
-$$;
+$$ language plpgsql security definer set search_path = public;
 
 -- Ensure the trigger exists (safe to run even if it already exists)
 drop trigger if exists on_auth_user_created on auth.users;
